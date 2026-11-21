@@ -16,6 +16,10 @@ namespace GorillaLocomotion
     {
         public float deviceModeEyeHeight = 1.6f;
 
+        [Tooltip("How far the whole play space is lowered, so you are shorter in the game and your hands " +
+                 "reach the ground without crouching. 0 = your real height. Increase if you still have to bend.")]
+        public float heightReduction = 0.6f;
+
         float nextCheck;
 
         void OnEnable() { nextCheck = 0f; }
@@ -41,7 +45,8 @@ namespace GorillaLocomotion
                 subsystem.TrySetTrackingOriginMode(TrackingOriginModeFlags.Floor);
 
             bool floor = (subsystem.GetTrackingOriginMode() & TrackingOriginModeFlags.Floor) != 0;
-            transform.localPosition = new Vector3(0f, floor ? 0f : deviceModeEyeHeight, 0f);
+            float y = (floor ? 0f : deviceModeEyeHeight) - heightReduction;
+            transform.localPosition = new Vector3(0f, y, 0f);
         }
     }
 }

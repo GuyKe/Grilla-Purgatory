@@ -69,3 +69,6 @@ same reach and leverage. It's saved and reused next launch; until you do it, not
 | Wall running | tall Wall, right | Push down parallel to the wall to gain height |
 | Pinch climbing | two leaning walls, straight ahead (~14 m) | Bounce between the walls, one hand on each, to climb |
 | Branching | two trees, ahead-left (~16-19 m) | Launch from branch to branch; catch a branch with one hand to redirect |
+
+**Height.** You're lowered by 0.6 m in the game so your hands reach the ground without crouching.
+Change `heightReduction` on the `Camera Offset` object's `XRTrackingSpace` component (0 = your real height).
