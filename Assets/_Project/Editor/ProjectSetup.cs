@@ -3,7 +3,6 @@
 //       Grilla Purgatory > 2. Create Hello VR Scene
 using System.IO;
 using System.Linq;
-using Unity.XR.CoreUtils;
 using UnityEditor;
 using UnityEditor.Build;
 using UnityEditor.SceneManagement;
@@ -230,7 +229,6 @@ namespace GrillaPurgatory.Setup
             // Root = the physics body. Its Y position is the floor (Floor tracking origin).
             var rigGo = new GameObject("XR Origin (Player)") { layer = playerLayer };
             rigGo.transform.position = Vector3.zero; // standing on the ground
-            var origin = rigGo.AddComponent<XROrigin>();
             var rb = rigGo.AddComponent<Rigidbody>();
             rb.mass = 1f;
             rb.useGravity = true;
@@ -249,9 +247,8 @@ namespace GrillaPurgatory.Setup
             camGo.AddComponent<AudioListener>();
             AddNodeTracker(camGo, XRNode.CenterEye);
 
-            origin.Camera = cam;
-            origin.CameraFloorOffsetObject = offset;
-            origin.RequestedTrackingOriginMode = XROrigin.TrackingOriginMode.Floor;
+            // Forces floor tracking so the head is at real height above the ground (see XRTrackingSpace).
+            offset.AddComponent<GorillaLocomotion.XRTrackingSpace>();
 
             var head = camGo.AddComponent<SphereCollider>();
             head.radius = 0.1f;
