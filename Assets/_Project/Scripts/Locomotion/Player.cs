@@ -53,6 +53,9 @@ namespace GorillaLocomotion
 
         public bool disableMovement = false;
 
+        [Tooltip("Friction of the body against the ground. Higher stops sliding sooner. Ice overrides it.")]
+        public float bodyFriction = 0.9f;
+
         private void Awake()
         {
             if (_instance != null && _instance != this)
@@ -67,6 +70,20 @@ namespace GorillaLocomotion
             // and so the hand/head start positions are real poses (see Update).
             playerRigidBody = GetComponent<Rigidbody>();
             playerRigidBody.isKinematic = true;
+
+            // Body friction. Without it the body coasts along the ground forever after a launch. Hands do
+            // the pushing (the body is moved directly), so this only slows and stops sliding.
+            // Minimum combine: the lower friction wins, so ice (a near-zero friction material) stays slippery.
+            var grip = new PhysicsMaterial("BodyGrip")
+            {
+                dynamicFriction = bodyFriction,
+                staticFriction = bodyFriction,
+                bounciness = 0f,
+                frictionCombine = PhysicsMaterialCombine.Minimum,
+                bounceCombine = PhysicsMaterialCombine.Minimum,
+            };
+            headCollider.sharedMaterial = grip;
+            bodyCollider.sharedMaterial = grip;
             if (locomotionEnabledLayers.value == 0)
                 Debug.LogWarning("[GorillaLocomotion] locomotionEnabledLayers is empty: nothing can be touched.");
         }

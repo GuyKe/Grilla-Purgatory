@@ -250,14 +250,10 @@ namespace GrillaPurgatory.Setup
             var head = camGo.AddComponent<SphereCollider>();
             head.radius = 0.1f;
 
-            var frictionless = GetOrCreateFrictionlessMaterial();
-
             var bodyGo = new GameObject("Body Collider") { layer = playerLayer };
             bodyGo.transform.SetParent(camGo.transform, false);
             var body = bodyGo.AddComponent<CapsuleCollider>();
             body.radius = 0.12f;
-            body.sharedMaterial = frictionless;
-            head.sharedMaterial = frictionless;
             var fitter = bodyGo.AddComponent<GorillaLocomotion.BodyColliderFitter>();
             fitter.floorReference = rigGo.transform;
 
@@ -318,6 +314,7 @@ namespace GrillaPurgatory.Setup
             var iceGo = CreateBlock(root, ice, new Vector3(-9f, 0.03f, 4f), new Vector3(8f, 0.06f, 8f));
             iceGo.name = "Ice";
             iceGo.AddComponent<GorillaLocomotion.Surface>().slipPercentage = GorillaLocomotion.Surface.IceSlip;
+            iceGo.GetComponent<Collider>().sharedMaterial = GetOrCreateLowFrictionMaterial("Ice", 0.02f); // body slides too
 
             // Tall wall for wall running (push down parallel to it) - to the right
             CreateBlock(root, wallMat, new Vector3(8f, 5f, 8f), new Vector3(0.6f, 10f, 14f)).name = "Wall";
@@ -384,21 +381,23 @@ namespace GrillaPurgatory.Setup
             return follower.transform;
         }
 
-        static PhysicsMaterial GetOrCreateFrictionlessMaterial()
+        /// <summary>A physics material that wins the friction combine when it is lower (e.g. ice).</summary>
+        static PhysicsMaterial GetOrCreateLowFrictionMaterial(string name, float friction)
         {
-            const string path = Root + "/Settings/Frictionless.physicMaterial";
+            string path = SettingsFolder + "/" + name + ".physicMaterial";
             var mat = AssetDatabase.LoadAssetAtPath<PhysicsMaterial>(path);
-            if (mat != null) return mat;
-            EnsureFolder(SettingsFolder);
-            mat = new PhysicsMaterial("Frictionless")
+            if (mat == null)
             {
-                dynamicFriction = 0f,
-                staticFriction = 0f,
-                bounciness = 0f,
-                frictionCombine = PhysicsMaterialCombine.Minimum,
-                bounceCombine = PhysicsMaterialCombine.Minimum,
-            };
-            AssetDatabase.CreateAsset(mat, path);
+                EnsureFolder(SettingsFolder);
+                mat = new PhysicsMaterial(name);
+                AssetDatabase.CreateAsset(mat, path);
+            }
+            mat.dynamicFriction = friction;
+            mat.staticFriction = friction;
+            mat.bounciness = 0f;
+            mat.frictionCombine = PhysicsMaterialCombine.Minimum;
+            mat.bounceCombine = PhysicsMaterialCombine.Minimum;
+            EditorUtility.SetDirty(mat);
             return mat;
         }
 
@@ -450,7 +449,7 @@ namespace GrillaPurgatory.Setup
             return block;
         }
 
-        static Material GetOrCreateMaterial(string name, Color color)
+        internal static Material GetOrCreateMaterial(string name, Color color)
         {
             string path = MaterialsFolder + "/" + name + ".mat";
             var mat = AssetDatabase.LoadAssetAtPath<Material>(path);

@@ -84,3 +84,10 @@ Menu item **2** now builds the field with a real terrain; to add it to a scene y
 - Grass blades (alpha-tested tufts) are drawn only within 25 m of the player to keep Quest fast.
 - Generated files land in `Assets/_Project/Art/Terrain/`. Re-running the menu regenerates them.
 - Terrain tuning is at the top of `Assets/_Project/Editor/TerrainBuilder.cs` (size, hill height, flat radius).
+
+## Trees and sliding
+- **Forest:** ~140 trees are planted across the hills (outside the flat start area). Trunks have colliders and
+  bark grip; every fourth tree is climbable, with branches to catch and swing between. Re-run menu item
+  **3** to replant. Tune counts/spacing at the top of `ForestBuilder.cs`.
+- **Sliding fix:** the body now has friction (`Player.bodyFriction`, default 0.9), so you stop after a launch
+  instead of coasting. Only the **Ice** patch is slippery (it has its own near-zero friction material).

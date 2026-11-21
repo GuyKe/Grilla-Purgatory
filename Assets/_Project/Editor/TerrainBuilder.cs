@@ -30,7 +30,7 @@ namespace GrillaPurgatory.Setup
         [MenuItem("Grilla Purgatory/3. Build Grass Terrain in Current Scene", priority = 3)]
         public static void BuildInCurrentScene()
         {
-            foreach (var name in new[] { "Ground", "Field Terrain" })
+            foreach (var name in new[] { "Ground", "Field Terrain", "Forest" })
             {
                 var old = GameObject.Find(name);
                 if (old != null) Object.DestroyImmediate(old);
@@ -104,6 +104,8 @@ namespace GrillaPurgatory.Setup
             terrain.detailObjectDistance = 25f;               // grass only close to the player
             terrain.detailObjectDensity = 0.7f;
             terrain.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+
+            ForestBuilder.Plant(terrain);
 
             AssetDatabase.SaveAssets();
             return go;
