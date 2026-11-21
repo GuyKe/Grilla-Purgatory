@@ -212,6 +212,8 @@ namespace GrillaPurgatory.Setup
             CreateBlock(blocks.transform, rockMat, new Vector3(3f, 1f, 4f), new Vector3(2f, 2f, 2f));
             CreateBlock(blocks.transform, rockMat, new Vector3(-4f, 1.5f, 5f), new Vector3(1.5f, 3f, 1.5f));
 
+            CreateTestCourse();
+
             CreateRig();
 
             EditorSceneManager.SaveScene(scene, ScenePath);
@@ -267,6 +269,18 @@ namespace GrillaPurgatory.Setup
             // Tracked controllers (invisible) + followers (what you see; clamped by surfaces)
             var leftTracked = CreateTrackedHand(offset.transform, "Left Hand Tracked", XRNode.LeftHand, playerLayer);
             var rightTracked = CreateTrackedHand(offset.transform, "Right Hand Tracked", XRNode.RightHand, playerLayer);
+            // Arm-span scaling: the locomotion reads these scaled copies of the controller poses
+            var leftScaled = new GameObject("Left Hand Scaled") { layer = playerLayer }.transform;
+            var rightScaled = new GameObject("Right Hand Scaled") { layer = playerLayer }.transform;
+            leftScaled.SetParent(offset.transform, false);
+            rightScaled.SetParent(offset.transform, false);
+            var scaler = rigGo.AddComponent<GorillaLocomotion.ArmSpanScaler>();
+            scaler.head = camGo.transform;
+            scaler.leftTracked = leftTracked;
+            scaler.rightTracked = rightTracked;
+            scaler.leftScaled = leftScaled;
+            scaler.rightScaled = rightScaled;
+
             var leftFollower = CreateHandFollower(rigGo.transform, "Left Hand Follower", playerLayer, true, leftTracked);
             var rightFollower = CreateHandFollower(rigGo.transform, "Right Hand Follower", playerLayer, false, rightTracked);
 
@@ -274,8 +288,8 @@ namespace GrillaPurgatory.Setup
             var player = rigGo.AddComponent<GorillaLocomotion.Player>();
             player.headCollider = head;
             player.bodyCollider = body;
-            player.leftHandTransform = leftTracked;
-            player.rightHandTransform = rightTracked;
+            player.leftHandTransform = leftScaled;
+            player.rightHandTransform = rightScaled;
             player.leftHandFollower = leftFollower;
             player.rightHandFollower = rightFollower;
             player.velocityHistorySize = 6;
@@ -295,6 +309,59 @@ namespace GrillaPurgatory.Setup
             arms.leftHand = leftFollower;
             arms.rightHand = rightFollower;
             arms.material = GetOrCreateMaterial("Arm_Placeholder", new Color(0.18f, 0.14f, 0.12f));
+        }
+
+        /// <summary>Practice area for each technique: ice, a wall, a pinch-climb chimney and two trees.</summary>
+        static void CreateTestCourse()
+        {
+            var root = new GameObject("Test Course").transform;
+            var bark = GetOrCreateMaterial("Bark_Placeholder", new Color(0.3f, 0.2f, 0.12f));
+            var ice = GetOrCreateMaterial("Ice_Placeholder", new Color(0.65f, 0.85f, 0.95f));
+            var wallMat = GetOrCreateMaterial("Wall_Placeholder", new Color(0.45f, 0.45f, 0.48f));
+
+            // Ice patch (slippery) - to the left
+            var iceGo = CreateBlock(root, ice, new Vector3(-9f, 0.03f, 4f), new Vector3(8f, 0.06f, 8f));
+            iceGo.name = "Ice";
+            iceGo.AddComponent<GorillaLocomotion.Surface>().slipPercentage = GorillaLocomotion.Surface.IceSlip;
+
+            // Tall wall for wall running (push down parallel to it) - to the right
+            CreateBlock(root, wallMat, new Vector3(8f, 5f, 8f), new Vector3(0.6f, 10f, 14f)).name = "Wall";
+
+            // Pinch-climb chimney: two walls leaning slightly toward each other, ~1.4 m apart
+            var lw = CreateBlock(root, wallMat, new Vector3(-0.85f, 5f, 14f), new Vector3(0.4f, 10f, 5f));
+            var rw = CreateBlock(root, wallMat, new Vector3(0.85f, 5f, 14f), new Vector3(0.4f, 10f, 5f));
+            lw.name = "Chimney Left"; rw.name = "Chimney Right";
+            lw.transform.rotation = Quaternion.Euler(0f, 0f, -4f);
+            rw.transform.rotation = Quaternion.Euler(0f, 0f, 4f);
+
+            // Two trees with branches to swing between
+            CreateTree(root, bark, new Vector3(-10f, 0f, 16f), 0f);
+            CreateTree(root, bark, new Vector3(-5f, 0f, 19f), 40f);
+        }
+
+        static void CreateTree(Transform parent, Material bark, Vector3 pos, float yawOffset)
+        {
+            var tree = new GameObject("Tree").transform;
+            tree.SetParent(parent, false);
+            tree.position = pos;
+
+            var trunk = CreateBlock(tree, bark, pos + Vector3.up * 5f, Vector3.one, PrimitiveType.Cylinder);
+            trunk.name = "Trunk";
+            trunk.transform.localScale = new Vector3(0.9f, 5f, 0.9f); // 0.9 m wide, 10 m tall
+            trunk.AddComponent<GorillaLocomotion.Surface>().slipPercentage = GorillaLocomotion.Surface.BarkSlip;
+
+            // Branches spiral up the trunk
+            for (int i = 0; i < 5; i++)
+            {
+                float yaw = yawOffset + i * 72f;
+                float height = 2.5f + i * 1.6f;
+                Vector3 dir = Quaternion.Euler(0f, yaw, 0f) * Vector3.forward;
+                var branch = CreateBlock(tree, bark, pos + Vector3.up * height + dir * 1.6f, Vector3.one, PrimitiveType.Cylinder);
+                branch.name = "Branch " + (i + 1);
+                branch.transform.localScale = new Vector3(0.22f, 1.6f, 0.22f);        // 3.2 m long
+                branch.transform.rotation = Quaternion.LookRotation(dir) * Quaternion.Euler(90f, 0f, 0f);
+                branch.AddComponent<GorillaLocomotion.Surface>().slipPercentage = GorillaLocomotion.Surface.BarkSlip;
+            }
         }
 
         static Transform CreateTrackedHand(Transform parent, string name, XRNode node, int layer)
@@ -375,15 +442,17 @@ namespace GrillaPurgatory.Setup
             go.AddComponent<GorillaLocomotion.XRNodeTracker>().node = node;
         }
 
-        static void CreateBlock(Transform parent, Material mat, Vector3 pos, Vector3 size)
+        static GameObject CreateBlock(Transform parent, Material mat, Vector3 pos, Vector3 size,
+            PrimitiveType type = PrimitiveType.Cube)
         {
-            var block = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            var block = GameObject.CreatePrimitive(type);
             block.name = "Block";
             block.transform.SetParent(parent, false);
             block.transform.position = pos;
             block.transform.localScale = size;
             block.isStatic = true;
             block.GetComponent<Renderer>().sharedMaterial = mat;
+            return block;
         }
 
         static Material GetOrCreateMaterial(string name, Color color)

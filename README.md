@@ -48,3 +48,24 @@ step) and **→ 2. Create Hello VR Scene** (it rebuilds `Field.unity` with the l
 The locomotion code in `Assets/_Project/Scripts/Locomotion/` is
 [Another-Axiom/GorillaLocomotion](https://github.com/Another-Axiom/GorillaLocomotion) (MIT, license
 included), lightly adapted for Unity 6. Commit the generated `.meta` files and `ProjectSettings/` afterward.
+
+## Movement guide
+Movement is entirely hand-contact propulsion: no legs, no joystick. Press your hands into geometry and
+the opposite push moves you; the speed of your arms when you let go is carried into the air.
+
+**Surfaces.** Add a `Surface` component to any object and set `slipPercentage`:
+`0.001` = bark/rough (stick and push), `0.03` = normal, `0.9` = ice (hands skate over it).
+The scene's **Ice** patch and the **trees** use these.
+
+**Arm-span scaling.** Stand in a T-pose (arms straight out) and **hold both grip buttons for 1.5 s**.
+You feel a short buzz and the game scales your hand reach so short- and long-armed players get the
+same reach and leverage. It's saved and reused next launch; until you do it, nothing is scaled.
+
+**Test course** (built by menu item 2, in front of and around the start point):
+| Technique | Where | How |
+|---|---|---|
+| Ground running | the grass | Alternate hands, swinging low and close to the ground like skiing or crawling |
+| Slippery surfaces | Ice patch, left | Notice your hands skate instead of gripping |
+| Wall running | tall Wall, right | Push down parallel to the wall to gain height |
+| Pinch climbing | two leaning walls, straight ahead (~14 m) | Bounce between the walls, one hand on each, to climb |
+| Branching | two trees, ahead-left (~16-19 m) | Launch from branch to branch; catch a branch with one hand to redirect |
