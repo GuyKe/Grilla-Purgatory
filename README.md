@@ -147,3 +147,11 @@ so it prowls around the edge instead. You respawn here after dying, and both con
 After a respawn the locomotion kept its old running speed average, so every hand touch pushed you in the direction
 you had been moving when you died. `Player.InitializeValues` now clears the speed average and contact state, and the
 cutscene restores your heading and un-freezes your body before the respawn.
+
+## Heartbeat and closer monster
+- **Heartbeat** (`HeartbeatProximity`): inside 25 m of the monster you hear your own heartbeat and feel it in both
+  controllers. It gets louder and faster as the monster closes in, and starts whenever it is hunting you, even far
+  away. It goes quiet inside the safe zone. Tuning is on the component (range, beat speed, volume, rumble).
+- **Closer monster:** it now starts 24-36 m from where you spawn (was 50-75 m), and reappears 24-36 m away after
+  you die (`respawnMinDistance` / `respawnMaxDistance` on `MonsterAI`). You still spawn inside the safe zone.
+  Re-run menu **4** on an existing scene to move its starting position.

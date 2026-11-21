@@ -43,6 +43,11 @@ namespace GrillaPurgatory.Monster
         [Header("Wandering")]
         public float wanderRadius = 45f;
 
+        [Header("Respawn")]
+        [Tooltip("After you die, the monster reappears this far from your spawn point (metres).")]
+        public float respawnMinDistance = 24f;
+        public float respawnMaxDistance = 36f;
+
         [Header("References (set by the builder)")]
         public Transform eyes;
         public MonsterAnimator monsterAnimator;
@@ -59,6 +64,8 @@ namespace GrillaPurgatory.Monster
         void Awake()
         {
             agent = GetComponent<NavMeshAgent>();
+            // Older scenes built before the heartbeat existed won't have it on the prefab
+            if (GetComponent<HeartbeatProximity>() == null) gameObject.AddComponent<HeartbeatProximity>();
             int playerLayer = LayerMask.NameToLayer("Player");
             if (playerLayer >= 0) sightMask = ~(1 << playerLayer);
         }
@@ -282,7 +289,7 @@ namespace GrillaPurgatory.Monster
             // Put the monster well away from the spawn point
             for (int i = 0; i < 30; i++)
             {
-                Vector2 c = Random.insideUnitCircle.normalized * Random.Range(55f, 85f);
+                Vector2 c = Random.insideUnitCircle.normalized * Random.Range(respawnMinDistance, respawnMaxDistance);
                 Vector3 candidate = spawnPoint + new Vector3(c.x, 0f, c.y);
                 if (NavMesh.SamplePosition(candidate, out var hit, 30f, NavMesh.AllAreas))
                 {

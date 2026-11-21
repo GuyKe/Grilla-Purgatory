@@ -69,10 +69,10 @@ namespace GrillaPurgatory.Setup
             for (int i = 0; i < 50; i++)
             {
                 float angle = Random.value * Mathf.PI * 2f;
-                float radius = Random.Range(50f, 75f);
+                float radius = Random.Range(24f, 36f);   // close enough to feel it, far enough to start safe
                 var p = new Vector3(Mathf.Cos(angle) * radius, 0f, Mathf.Sin(angle) * radius);
-                if (NavMesh.SamplePosition(p, out var hit, 40f, NavMesh.AllAreas) &&
-                    new Vector2(hit.position.x, hit.position.z).magnitude > 40f)
+                if (NavMesh.SamplePosition(p, out var hit, 10f, NavMesh.AllAreas) &&
+                    new Vector2(hit.position.x, hit.position.z).magnitude > 14f)
                     return hit.position;
             }
             Debug.LogWarning("[Grilla Purgatory] No NavMesh found for the monster start. Build the terrain first (menu 3).");
@@ -226,6 +226,7 @@ namespace GrillaPurgatory.Setup
             var ai = root.AddComponent<MonsterAI>();
             ai.eyes = eyePoint;
             ai.monsterAnimator = anim;
+            root.AddComponent<HeartbeatProximity>();
             var cutscene = root.AddComponent<DeathCutscene>();
             cutscene.overlayMaterial = MakeOverlayMaterial();
             ai.cutscene = cutscene;
