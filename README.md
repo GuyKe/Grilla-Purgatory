@@ -115,10 +115,10 @@ All tuning is on the `MonsterAI` component. Movement and sound (footfalls, growl
 clips or audio files. Generated assets are in `Assets/_Project/Art/Monster/` and `Prefabs/Monster.prefab`.
 
 ## Death cutscene
-When the monster reaches you (`DeathCutscene`, about 8 s):
+When the monster reaches you (`DeathCutscene`, about 9 s):
 1. **Dread.** Time slows, you are turned to face it, a heartbeat quickens and the screen reddens and shakes.
 2. **The lunge.** It dives at your face, jaws wide, and bites. Hard cut to black with a bite sound.
-3. **Black screen.** "YOU WERE DEVOURED", how long you survived, and your best time (saved).
+3. **Black screen.** Nothing to see, just the sound of the monster eating you: chewing, crunching, tearing and a growl.
 4. **You wake** back at the start and the world fades in. The monster has been moved far away.
 
 Timings are on the `DeathCutscene` component of the monster. Sound is synthesised, so there are no audio files.

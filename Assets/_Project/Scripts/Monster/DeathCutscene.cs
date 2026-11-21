@@ -1,16 +1,14 @@
 using System.Collections;
 using GorillaLocomotion;
-using GrillaPurgatory.Game;
 using UnityEngine;
-using UnityEngine.UI;
 
 namespace GrillaPurgatory.Monster
 {
     /// <summary>
     /// What happens when the monster catches you:
     ///   1. Dread: time slows, you are turned to face it, a heartbeat quickens, the screen reddens and shakes.
-    ///   2. The lunge: the monster dives at your face, jaws wide, and bites. Red flash.
-    ///   3. Black: "YOU WERE DEVOURED", how long you survived and your best time.
+    ///   2. The lunge: the monster dives at your face, jaws wide, and bites. Hard cut to black.
+    ///   3. Black: nothing on screen, only the sound of the monster eating you.
     ///   4. You wake at the start; the screen fades back in.
     /// Everything is real-time, so the slow motion does not stretch the timing.
     /// </summary>
@@ -22,10 +20,8 @@ namespace GrillaPurgatory.Monster
         [Header("Timing (real seconds)")]
         public float dreadSeconds = 1.8f;
         public float lungeSeconds = 0.35f;
-        public float blackSeconds = 4.5f;
+        public float blackSeconds = 5.5f;
         public float fadeInSeconds = 1.6f;
-
-        const string BestKey = "GrillaPurgatory.BestSurvivalSeconds";
 
         public IEnumerator Play(MonsterAI monster, Player player, Transform head, float survived, System.Action respawn)
         {
@@ -124,43 +120,18 @@ namespace GrillaPurgatory.Monster
 
                 if (cam != null)
                 {
-                    cam.cullingMask = 1 << UiKit.UiLayer;   // draw only the UI: pure black plus the text below
+                    cam.cullingMask = 0;                    // draw nothing: pure black
                     cam.clearFlags = CameraClearFlags.SolidColor;
                     cam.backgroundColor = Color.black;
                 }
                 SetOverlay(overlay, new Color(0f, 0f, 0f, 0f));
 
-                // ---------------------------------------------------------------- 3. black screen
-                yield return new WaitForSecondsRealtime(0.6f);
-
-                audio.clip = DroneClip();
-                audio.loop = true;
-                audio.volume = 0.6f;
+                // ---------------------------------------------------------------- 3. black screen: the monster eating you
+                audio.clip = EatingClip(blackSeconds);
+                audio.loop = false;
+                audio.volume = 1f;
                 audio.Play();
-
-                float best = PlayerPrefs.GetFloat(BestKey, 0f);
-                bool newBest = survived > best;
-                if (newBest)
-                {
-                    best = survived;
-                    PlayerPrefs.SetFloat(BestKey, best);
-                    PlayerPrefs.Save();
-                }
-
-                var group = BuildText(head, survived, best, newBest);
-                for (float t = 0f; t < 1f; t += Time.unscaledDeltaTime)
-                {
-                    group.alpha = t;
-                    yield return null;
-                }
-                group.alpha = 1f;
-                yield return new WaitForSecondsRealtime(Mathf.Max(0f, blackSeconds - 1.6f));
-                for (float t = 0f; t < 0.6f; t += Time.unscaledDeltaTime)
-                {
-                    group.alpha = 1f - t / 0.6f;
-                    yield return null;
-                }
-                Destroy(group.gameObject);
+                yield return new WaitForSecondsRealtime(blackSeconds);
                 audio.Stop();
 
                 // ---------------------------------------------------------------- 4. you wake up
@@ -202,31 +173,6 @@ namespace GrillaPurgatory.Monster
             if (m != null) m.SetColor("_BaseColor", c);
         }
 
-        static CanvasGroup BuildText(Transform head, float survived, float best, bool newBest)
-        {
-            Vector3 forward = Vector3.ProjectOnPlane(head.forward, Vector3.up).normalized;
-            if (forward.sqrMagnitude < 0.01f) forward = Vector3.forward;
-
-            var canvas = UiKit.MakeWorldCanvas("Death Text", null, new Vector2(900f, 500f), 0.0016f);
-            canvas.transform.position = head.position + forward * 1.4f;
-            canvas.transform.rotation = Quaternion.LookRotation(forward);
-            var group = canvas.gameObject.AddComponent<CanvasGroup>();
-            group.alpha = 0f;
-
-            var root = canvas.transform;
-            UiKit.MakeText("YOU WERE DEVOURED", root, new Vector2(0, 110), new Vector2(900, 120), 88, new Color(0.75f, 0.05f, 0.05f), TextAnchor.MiddleCenter, FontStyle.Bold);
-            UiKit.MakeText("You survived  " + FormatTime(survived), root, new Vector2(0, 0), new Vector2(900, 70), 52, new Color(0.85f, 0.85f, 0.85f));
-            UiKit.MakeText(newBest ? "NEW BEST!" : "Best  " + FormatTime(best), root, new Vector2(0, -70), new Vector2(900, 60), 40,
-                newBest ? new Color(1f, 0.85f, 0.2f) : new Color(0.6f, 0.6f, 0.6f));
-            return group;
-        }
-
-        static string FormatTime(float seconds)
-        {
-            int total = Mathf.FloorToInt(seconds);
-            return (total / 60) + ":" + (total % 60).ToString("00");
-        }
-
         // ------------------------------------------------------------ synthesised audio
 
         const int Rate = 22050;
@@ -266,17 +212,99 @@ namespace GrillaPurgatory.Monster
             return Make("Bite", data);
         }
 
-        static AudioClip DroneClip()
+        /// <summary>
+        /// Being eaten, in the dark: a wavering low growl, wet chewing with crunches, long tearing rasps and a few
+        /// bone snaps. Fades out at the end.
+        /// </summary>
+        static AudioClip EatingClip(float seconds)
         {
-            const float length = 4f; // whole cycles of both tones, so it loops cleanly
-            int n = (int)(Rate * length);
+            int n = (int)(Rate * seconds);
             var data = new float[n];
-            for (int i = 0; i < n; i++)
+            var rng = new System.Random(9);
+
+            for (int i = 0; i < n; i++)                       // growl underneath
             {
                 float t = i / (float)Rate;
-                data[i] = (Mathf.Sin(2f * Mathf.PI * 43f * t) + Mathf.Sin(2f * Mathf.PI * 44.25f * t)) * 0.3f;
+                float wobble = 0.6f + 0.4f * Mathf.Sin(2f * Mathf.PI * 2.3f * t);
+                data[i] += (Mathf.Sin(2f * Mathf.PI * 58f * t) + 0.5f * Mathf.Sin(2f * Mathf.PI * 87f * t)) * 0.12f * wobble;
             }
-            return Make("Drone", data);
+
+            for (float at = 0.15f; at < seconds - 0.4f; at += 0.24f + (float)rng.NextDouble() * 0.24f)
+                AddChew(data, at, rng);
+
+            for (int k = 0; k < 4; k++)
+                AddTear(data, 0.4f + k * (seconds - 1.2f) / 4f + (float)rng.NextDouble() * 0.3f, rng);
+
+            for (int k = 0; k < 3; k++)
+                AddSnap(data, 0.8f + (float)rng.NextDouble() * (seconds - 1.6f), rng);
+
+            float peak = 0.0001f;
+            for (int i = 0; i < n; i++) peak = Mathf.Max(peak, Mathf.Abs(data[i]));
+            int fade = (int)(Rate * 0.6f);
+            for (int i = 0; i < n; i++)
+            {
+                float gain = 0.9f / peak;
+                if (i > n - fade) gain *= (n - i) / (float)fade;
+                data[i] *= gain;
+            }
+            return Make("Eating", data);
+        }
+
+        // A wet squelch (noise through a closing low-pass), a few crunches and a dull thud
+        static void AddChew(float[] data, float start, System.Random rng)
+        {
+            int s = (int)(start * Rate);
+            const float length = 0.22f;
+            int len = (int)(length * Rate);
+            float lowpass = 0f;
+            for (int j = 0; j < len && s + j < data.Length; j++)
+            {
+                float t = j / (float)Rate;
+                float noise = (float)rng.NextDouble() * 2f - 1f;
+                lowpass += (noise - lowpass) * Mathf.Lerp(0.55f, 0.06f, t / length);
+                float squelch = lowpass * Mathf.Exp(-t * 11f) * 1.6f;
+                float thud = Mathf.Sin(2f * Mathf.PI * (75f - 35f * t) * t) * Mathf.Exp(-t * 22f) * 0.5f;
+                data[s + j] += squelch + thud;
+            }
+
+            int clicks = 3 + rng.Next(3);
+            for (int c = 0; c < clicks; c++)
+            {
+                int at = s + (int)((float)rng.NextDouble() * 0.12f * Rate);
+                for (int q = 0; q < (int)(0.008f * Rate) && at + q < data.Length; q++)
+                {
+                    float noise = (float)rng.NextDouble() * 2f - 1f;
+                    data[at + q] += noise * Mathf.Exp(-q / (0.0025f * Rate)) * 0.6f;
+                }
+            }
+        }
+
+        // A long, rasping rip: high-passed noise swelling and fading
+        static void AddTear(float[] data, float start, System.Random rng)
+        {
+            int s = (int)(start * Rate);
+            const float length = 0.45f;
+            int len = (int)(length * Rate);
+            float previous = 0f;
+            for (int j = 0; j < len && s + j < data.Length; j++)
+            {
+                float noise = (float)rng.NextDouble() * 2f - 1f;
+                float envelope = Mathf.Sin(Mathf.PI * j / (float)len);
+                data[s + j] += (noise - previous) * 0.5f * envelope * 0.7f;
+                previous = noise;
+            }
+        }
+
+        // A sharp snap, like bone
+        static void AddSnap(float[] data, float start, System.Random rng)
+        {
+            int s = (int)(start * Rate);
+            for (int q = 0; q < (int)(0.05f * Rate) && s + q < data.Length; q++)
+            {
+                float t = q / (float)Rate;
+                float noise = (float)rng.NextDouble() * 2f - 1f;
+                data[s + q] += noise * Mathf.Exp(-t * 120f) * 0.9f + Mathf.Sin(2f * Mathf.PI * 190f * t) * Mathf.Exp(-t * 70f) * 0.5f;
+            }
         }
 
         static AudioClip Make(string name, float[] data)
