@@ -38,7 +38,9 @@ step) and **→ 2. Create Hello VR Scene** (it rebuilds `Field.unity` with the l
 
 - You start standing on the ground, with a capsule body from your head to the floor.
 - Push your hands against the ground or the blocks to move; swing your arms and release to launch.
-- The brown spheres are your hands; they stop at surfaces while your real hands keep going.
+- The spheres are your hands; they stop at surfaces while your real hands keep going. Their colour is a
+  built-in debug aid: **blue** = controller not tracked, **brown** = tracked, **red** = touching a surface.
+- Nothing moves until the headset is tracking (the body is frozen until then).
 - Tune the numbers on the **XR Origin (Player)** object's `Player` component
   (`velocityLimit`, `maxJumpSpeed`, `jumpMultiplier`, `maxArmLength`, ...).
 - Add a `Surface` component to any object to make it slippery (`slipPercentage`, e.g. 0.03 = sticky, 1 = ice).

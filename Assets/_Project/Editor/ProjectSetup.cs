@@ -10,10 +10,9 @@ using UnityEditor.SceneManagement;
 using UnityEditor.XR.Management;
 using UnityEditor.XR.Management.Metadata;
 using UnityEngine;
-using UnityEngine.InputSystem;
-using UnityEngine.InputSystem.XR;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
+using UnityEngine.XR;
 using UnityEngine.XR.OpenXR;
 
 namespace GrillaPurgatory.Setup
@@ -248,7 +247,7 @@ namespace GrillaPurgatory.Setup
             cam.nearClipPlane = 0.01f;
             cam.farClipPlane = 120f;
             camGo.AddComponent<AudioListener>();
-            AddPoseDriver(camGo, "<XRHMD>/centerEyePosition", "<XRHMD>/centerEyeRotation", "<XRHMD>/trackingState");
+            AddNodeTracker(camGo, XRNode.CenterEye);
 
             origin.Camera = cam;
             origin.CameraFloorOffsetObject = offset;
@@ -269,10 +268,10 @@ namespace GrillaPurgatory.Setup
             fitter.floorReference = rigGo.transform;
 
             // Tracked controllers (invisible) + followers (what you see; clamped by surfaces)
-            var leftTracked = CreateTrackedHand(offset.transform, "Left Hand Tracked", "LeftHand", playerLayer);
-            var rightTracked = CreateTrackedHand(offset.transform, "Right Hand Tracked", "RightHand", playerLayer);
-            var leftFollower = CreateHandFollower(rigGo.transform, "Left Hand Follower", playerLayer);
-            var rightFollower = CreateHandFollower(rigGo.transform, "Right Hand Follower", playerLayer);
+            var leftTracked = CreateTrackedHand(offset.transform, "Left Hand Tracked", XRNode.LeftHand, playerLayer);
+            var rightTracked = CreateTrackedHand(offset.transform, "Right Hand Tracked", XRNode.RightHand, playerLayer);
+            var leftFollower = CreateHandFollower(rigGo.transform, "Left Hand Follower", playerLayer, true, leftTracked);
+            var rightFollower = CreateHandFollower(rigGo.transform, "Right Hand Follower", playerLayer, false, rightTracked);
 
             // Gorilla locomotion (Another-Axiom/GorillaLocomotion, MIT)
             var player = rigGo.AddComponent<GorillaLocomotion.Player>();
@@ -294,16 +293,15 @@ namespace GrillaPurgatory.Setup
             player.locomotionEnabledLayers = ~(1 << playerLayer); // everything except the player itself
         }
 
-        static Transform CreateTrackedHand(Transform parent, string name, string usage, int layer)
+        static Transform CreateTrackedHand(Transform parent, string name, XRNode node, int layer)
         {
             var hand = new GameObject(name) { layer = layer };
             hand.transform.SetParent(parent, false);
-            string device = "<XRController>{" + usage + "}";
-            AddPoseDriver(hand, device + "/devicePosition", device + "/deviceRotation", device + "/trackingState");
+            AddNodeTracker(hand, node);
             return hand.transform;
         }
 
-        static Transform CreateHandFollower(Transform parent, string name, int layer)
+        static Transform CreateHandFollower(Transform parent, string name, int layer, bool isLeft, Transform tracked)
         {
             var follower = GameObject.CreatePrimitive(PrimitiveType.Sphere);
             follower.name = name;
@@ -313,6 +311,10 @@ namespace GrillaPurgatory.Setup
             follower.transform.localScale = Vector3.one * 0.12f;
             follower.GetComponent<Renderer>().sharedMaterial =
                 GetOrCreateMaterial("Hand_Placeholder", new Color(0.25f, 0.2f, 0.17f));
+
+            var indicator = follower.AddComponent<GorillaLocomotion.HandContactIndicator>();
+            indicator.isLeft = isLeft;
+            indicator.tracker = tracked.GetComponent<GorillaLocomotion.XRNodeTracker>();
             return follower.transform;
         }
 
@@ -364,15 +366,9 @@ namespace GrillaPurgatory.Setup
             timeManager.ApplyModifiedPropertiesWithoutUndo();
         }
 
-        static void AddPoseDriver(GameObject go, string position, string rotation, string trackingState)
+        static void AddNodeTracker(GameObject go, XRNode node)
         {
-            var driver = go.AddComponent<TrackedPoseDriver>();
-            driver.positionInput = new InputActionProperty(
-                new InputAction(go.name + " Position", binding: position, expectedControlType: "Vector3"));
-            driver.rotationInput = new InputActionProperty(
-                new InputAction(go.name + " Rotation", binding: rotation, expectedControlType: "Quaternion"));
-            driver.trackingStateInput = new InputActionProperty(
-                new InputAction(go.name + " Tracking State", binding: trackingState, expectedControlType: "Integer"));
+            go.AddComponent<GorillaLocomotion.XRNodeTracker>().node = node;
         }
 
         static void CreateBlock(Transform parent, Material mat, Vector3 pos, Vector3 size)

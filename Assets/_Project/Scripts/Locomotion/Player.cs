@@ -63,8 +63,15 @@ namespace GorillaLocomotion
             {
                 _instance = this;
             }
-            InitializeValues();
+            // Stay frozen until the headset is tracking, so we don't start half inside the ground
+            // and so the hand/head start positions are real poses (see Update).
+            playerRigidBody = GetComponent<Rigidbody>();
+            playerRigidBody.isKinematic = true;
+            if (locomotionEnabledLayers.value == 0)
+                Debug.LogWarning("[GorillaLocomotion] locomotionEnabledLayers is empty: nothing can be touched.");
         }
+
+        private bool initialized;
 
         public void InitializeValues()
         {
@@ -108,6 +115,14 @@ namespace GorillaLocomotion
 
         private void Update()
         {
+            if (!initialized)
+            {
+                if (headCollider.transform.position.y - transform.position.y < 0.25f) return; // not tracking yet
+                InitializeValues();
+                playerRigidBody.isKinematic = false;
+                initialized = true;
+            }
+
             bool leftHandColliding = false;
             bool rightHandColliding = false;
             Vector3 finalPosition;

@@ -25,6 +25,7 @@ namespace GorillaLocomotion
             if (floorReference == null) return;
 
             float headHeight = transform.parent.position.y - floorReference.position.y;
+            capsule.enabled = headHeight >= 0.25f; // headset not tracking yet
             float height = Mathf.Max(minHeight, headHeight - floorClearance);
             capsule.direction = 1; // Y axis
             capsule.height = height;
