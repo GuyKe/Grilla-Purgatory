@@ -58,10 +58,10 @@ namespace GorillaLocomotion
         public static event System.Action<Vector3, float> HandStrike;
 
         [Header("Noise")]
-        [Tooltip("Hand speed (m/s) at or below which a touch makes no sound.")]
-        public float quietHandSpeed = 0.3f;
+        [Tooltip("Hand speed (m/s) at or below which a touch makes no sound. Creeping and tiptoeing stay under this.")]
+        public float quietHandSpeed = 0.8f;
         [Tooltip("Hand speed (m/s) at or above which a touch is a full-volume slap.")]
-        public float loudHandSpeed = 3f;
+        public float loudHandSpeed = 4f;
 
         float leftHandSpeed, rightHandSpeed;
 

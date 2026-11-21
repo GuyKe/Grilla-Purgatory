@@ -81,6 +81,7 @@ namespace GrillaPurgatory.Setup
             // ---- the wall-mounted computer (graphics settings) and update log, on the back wall near the spawn
             MountPanel(root, "Graphics Computer", 270f, new Vector2(0.9f, 0.56f), typeof(ComputerScreen), true);
             MountPanel(root, "Update Log", 296f, new Vector2(0.9f, 0.64f), typeof(UpdateLogScreen), false);
+            MountSign(root, "Bots Sign", 256f, "Join code <b><color=#ffd34d>BOTS</color></b> if you're a scardy cat");
 
             // ---- safe zone: the monster can't see, hear or catch you inside, and the interior is cut out of the NavMesh
             var safe = new GameObject("Dome Safe Zone");
@@ -91,10 +92,37 @@ namespace GrillaPurgatory.Setup
             var volume = safe.AddComponent<NavMeshModifierVolume>();
             volume.size = new Vector3(Radius * 2f + 3f, 8f, Radius * 2f + 3f);
             volume.center = new Vector3(0f, 2f, 0f);
-            volume.area = 1;   // Not Walkable
+            volume.area = 2;   // "Jump": walkable for you and the bots, but the monster is told never to enter it (see MonsterAI)
         }
 
         // ---------------------------------------------------------------- wall panels
+
+        /// <summary>A wooden sign on two posts against the wall, with painted text.</summary>
+        static void MountSign(Transform parent, string name, float azimuthDegrees, string text)
+        {
+            float a = azimuthDegrees * Mathf.Deg2Rad;
+            Vector3 toWall = new Vector3(Mathf.Cos(a), 0f, Mathf.Sin(a));
+            var wood = ProjectSetup.GetOrCreateMaterial("Desk_Placeholder", new Color(0.25f, 0.18f, 0.12f));
+
+            var root = new GameObject(name).transform;
+            root.SetParent(parent, false);
+            root.position = toWall * (Radius - Thickness - 0.2f);
+            root.rotation = Quaternion.LookRotation(toWall, Vector3.up);   // local +Z points at the wall, away from the viewer
+
+            const float width = 1.7f, height = 0.72f, centerY = 1.55f;
+            Box(root, "Sign Board", wood, new Vector3(0f, centerY, 0.1f), new Vector3(width, height, 0.06f));
+            foreach (float x in new[] { -0.72f, 0.72f })
+                Box(root, "Sign Post", wood, new Vector3(x, (centerY - height * 0.5f) * 0.5f, 0.1f), new Vector3(0.07f, centerY - height * 0.5f, 0.07f));
+
+            var label = new GameObject("Sign Text").transform;
+            label.SetParent(root, false);
+            label.localPosition = new Vector3(0f, centerY, 0.065f);   // just in front of the board
+            var sign = label.gameObject.AddComponent<SignBoard>();
+            sign.text = text;
+            sign.canvasPixels = new Vector2(1000f, 420f);
+            sign.metersPerPixel = 0.0016f;
+            sign.fontSize = 76;
+        }
 
         /// <summary>A screen bolted to the dome wall on a wooden plate, with a shelf underneath.</summary>
         static void MountPanel(Transform parent, string name, float azimuthDegrees, Vector2 screenMeters, System.Type screenType, bool keyboard)

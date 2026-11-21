@@ -49,43 +49,20 @@ namespace GrillaPurgatory.Setup
             var oldAvatar = rig.GetComponent<PlayerAvatar>();
             if (oldAvatar != null) Object.DestroyImmediate(oldAvatar);
 
-            EnsureFolder(Folder + "/Textures");
-            var fur = FurMaterial("Avatar_Fur", new Color(0.30f, 0.15f, 0.07f), new Color(0.58f, 0.34f, 0.16f), 300);
-            var furDark = FurMaterial("Avatar_FurDark", new Color(0.18f, 0.09f, 0.05f), new Color(0.36f, 0.20f, 0.10f), 310);
-            var belly = FurMaterial("Avatar_Belly", new Color(0.62f, 0.45f, 0.30f), new Color(0.84f, 0.68f, 0.48f), 320);
-            var skin = Mat("Avatar_Skin", new Color(0.78f, 0.58f, 0.42f), 0.15f);
-            var white = Mat("Avatar_EyeWhite", new Color(0.95f, 0.95f, 0.92f), 0.6f);
-            var pupil = Mat("Avatar_Pupil", new Color(0.04f, 0.03f, 0.03f), 0.8f);
-            var dark = Mat("Avatar_Mouth", new Color(0.1f, 0.04f, 0.04f), 0.2f);
+            var m = MakeApeMaterials();
+            var fur = m.fur;
+            var furDark = m.furDark;
 
             // ---- body: hangs under the head, follows where you look (see PlayerAvatar)
             var body = new GameObject("Avatar Body").transform;
             body.SetParent(rig.transform, false);
-            Sphere(body, "Torso", fur, new Vector3(0f, -0.36f, -0.04f), new Vector3(0.52f, 0.5f, 0.36f));
-            Sphere(body, "Back Mound", furDark, new Vector3(0f, -0.22f, -0.15f), new Vector3(0.42f, 0.32f, 0.22f));
-            Sphere(body, "Belly", fur, new Vector3(0f, -0.54f, 0.02f), new Vector3(0.4f, 0.4f, 0.3f));
-            Sphere(body, "Chest Patch", belly, new Vector3(0f, -0.33f, 0.1f), new Vector3(0.3f, 0.32f, 0.13f));
-            Sphere(body, "Belly Patch", belly, new Vector3(0f, -0.54f, 0.13f), new Vector3(0.27f, 0.28f, 0.13f));
-            for (int side = -1; side <= 1; side += 2)
-                Sphere(body, "Shoulder Mound", fur, new Vector3(side * 0.27f, -0.2f, -0.02f), Vector3.one * 0.22f);
+            BuildApeBody(body, m);
 
             // ---- head: on a layer the player's own camera doesn't draw
             var headRoot = new GameObject("Avatar Head").transform;
             headRoot.SetParent(head, false);
             headRoot.localPosition = new Vector3(0f, -0.01f, -0.09f);   // the camera is at the eyes, a little forward of the head's centre
-
-            Sphere(headRoot, "Skull", fur, Vector3.zero, new Vector3(0.28f, 0.27f, 0.28f));
-            Sphere(headRoot, "Crest", furDark, new Vector3(0f, 0.12f, -0.03f), new Vector3(0.1f, 0.08f, 0.17f));
-            Sphere(headRoot, "Muzzle", skin, new Vector3(0f, -0.05f, 0.12f), new Vector3(0.18f, 0.14f, 0.11f));
-            Sphere(headRoot, "Nose", dark, new Vector3(0f, -0.025f, 0.18f), new Vector3(0.045f, 0.03f, 0.025f));
-            Sphere(headRoot, "Mouth", dark, new Vector3(0f, -0.085f, 0.175f), new Vector3(0.075f, 0.01f, 0.012f));
-            Capsule(headRoot, "Brow", furDark, new Vector3(0f, 0.045f, 0.125f), 0.045f, 0.19f, new Vector3(0f, 0f, 90f));
-            for (int side = -1; side <= 1; side += 2)
-            {
-                Sphere(headRoot, "Eye", white, new Vector3(side * 0.052f, 0.012f, 0.125f), Vector3.one * 0.048f);
-                Sphere(headRoot, "Pupil", pupil, new Vector3(side * 0.052f, 0.012f, 0.15f), Vector3.one * 0.024f);
-                Sphere(headRoot, "Ear", skin, new Vector3(side * 0.14f, 0f, -0.01f), new Vector3(0.04f, 0.075f, 0.075f));
-            }
+            BuildApeHead(headRoot, m);
             SetLayerRecursive(headRoot.gameObject, hiddenLayer);
 
             // ---- arms: thick and furry, with fists at the hand followers
@@ -108,8 +85,59 @@ namespace GrillaPurgatory.Setup
             avatar.body = body;
         }
 
+        /// <summary>The materials every ape (the player and the bots) is made from.</summary>
+        internal class ApeMaterials
+        {
+            public Material fur, furDark, belly, skin, white, pupil, dark;
+        }
+
+        internal static ApeMaterials MakeApeMaterials()
+        {
+            EnsureFolder(Folder + "/Textures");
+            return new ApeMaterials
+            {
+                fur = FurMaterial("Avatar_Fur", new Color(0.30f, 0.15f, 0.07f), new Color(0.58f, 0.34f, 0.16f), 300),
+                furDark = FurMaterial("Avatar_FurDark", new Color(0.18f, 0.09f, 0.05f), new Color(0.36f, 0.20f, 0.10f), 310),
+                belly = FurMaterial("Avatar_Belly", new Color(0.62f, 0.45f, 0.30f), new Color(0.84f, 0.68f, 0.48f), 320),
+                skin = Mat("Avatar_Skin", new Color(0.78f, 0.58f, 0.42f), 0.15f),
+                white = Mat("Avatar_EyeWhite", new Color(0.95f, 0.95f, 0.92f), 0.6f),
+                pupil = Mat("Avatar_Pupil", new Color(0.04f, 0.03f, 0.03f), 0.8f),
+                dark = Mat("Avatar_Mouth", new Color(0.1f, 0.04f, 0.04f), 0.2f),
+            };
+        }
+
+        /// <summary>The torso, belly and shoulders. 'body' sits at the head; the parts hang below it.</summary>
+        internal static void BuildApeBody(Transform body, ApeMaterials m)
+        {
+            Sphere(body, "Torso", m.fur, new Vector3(0f, -0.36f, -0.04f), new Vector3(0.52f, 0.5f, 0.36f));
+            Sphere(body, "Back Mound", m.furDark, new Vector3(0f, -0.22f, -0.15f), new Vector3(0.42f, 0.32f, 0.22f));
+            Sphere(body, "Belly", m.fur, new Vector3(0f, -0.54f, 0.02f), new Vector3(0.4f, 0.4f, 0.3f));
+            Sphere(body, "Chest Patch", m.belly, new Vector3(0f, -0.33f, 0.1f), new Vector3(0.3f, 0.32f, 0.13f));
+            Sphere(body, "Belly Patch", m.belly, new Vector3(0f, -0.54f, 0.13f), new Vector3(0.27f, 0.28f, 0.13f));
+            for (int side = -1; side <= 1; side += 2)
+                Sphere(body, "Shoulder Mound", m.fur, new Vector3(side * 0.27f, -0.2f, -0.02f), Vector3.one * 0.22f);
+
+        }
+
+        /// <summary>The head and face. 'headRoot' is the centre of the head.</summary>
+        internal static void BuildApeHead(Transform headRoot, ApeMaterials m)
+        {
+            Sphere(headRoot, "Skull", m.fur, Vector3.zero, new Vector3(0.28f, 0.27f, 0.28f));
+            Sphere(headRoot, "Crest", m.furDark, new Vector3(0f, 0.12f, -0.03f), new Vector3(0.1f, 0.08f, 0.17f));
+            Sphere(headRoot, "Muzzle", m.skin, new Vector3(0f, -0.05f, 0.12f), new Vector3(0.18f, 0.14f, 0.11f));
+            Sphere(headRoot, "Nose", m.dark, new Vector3(0f, -0.025f, 0.18f), new Vector3(0.045f, 0.03f, 0.025f));
+            Sphere(headRoot, "Mouth", m.dark, new Vector3(0f, -0.085f, 0.175f), new Vector3(0.075f, 0.01f, 0.012f));
+            Capsule(headRoot, "Brow", m.furDark, new Vector3(0f, 0.045f, 0.125f), 0.045f, 0.19f, new Vector3(0f, 0f, 90f));
+            for (int side = -1; side <= 1; side += 2)
+            {
+                Sphere(headRoot, "Eye", m.white, new Vector3(side * 0.052f, 0.012f, 0.125f), Vector3.one * 0.048f);
+                Sphere(headRoot, "Pupil", m.pupil, new Vector3(side * 0.052f, 0.012f, 0.15f), Vector3.one * 0.024f);
+                Sphere(headRoot, "Ear", m.skin, new Vector3(side * 0.14f, 0f, -0.01f), new Vector3(0.04f, 0.075f, 0.075f));
+            }
+        }
+
         /// <summary>Turns a hand follower sphere into a fist: a bigger furry ball with knuckles and a thumb.</summary>
-        static void MakeFist(Transform follower, Material fur, Material furDark)
+        internal static void MakeFist(Transform follower, Material fur, Material furDark)
         {
             for (int i = follower.childCount - 1; i >= 0; i--)
                 Object.DestroyImmediate(follower.GetChild(i).gameObject);

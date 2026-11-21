@@ -216,7 +216,7 @@ namespace GrillaPurgatory.Monster
         /// Being eaten, in the dark: a wavering low growl, wet chewing with crunches, long tearing rasps and a few
         /// bone snaps. Fades out at the end.
         /// </summary>
-        static AudioClip EatingClip(float seconds)
+        internal static AudioClip EatingClip(float seconds)
         {
             int n = (int)(Rate * seconds);
             var data = new float[n];

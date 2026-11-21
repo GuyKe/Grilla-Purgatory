@@ -17,6 +17,17 @@ namespace GrillaPurgatory.Game
         {
             new Entry
             {
+                Version = "v0.10", Title = "Rooms",
+                Notes = new[]
+                {
+                    "New ROOM tab on the computer: type a join code with the keyboard and press JOIN.",
+                    "Code BOTS: a room full of other players who act like real ones. Check the sign for who it's for.",
+                    "Bots chat, wander, tiptoe, panic and run for the dome, and the monster hunts them too.",
+                    "Only big movements make noise now. Tiptoe slowly and the monster won't hear you.",
+                },
+            },
+            new Entry
+            {
                 Version = "v0.9", Title = "The Dome",
                 Notes = new[]
                 {

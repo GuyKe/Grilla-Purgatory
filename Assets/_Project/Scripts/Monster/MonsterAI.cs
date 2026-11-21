@@ -16,7 +16,7 @@ namespace GrillaPurgatory.Monster
     [RequireComponent(typeof(NavMeshAgent))]
     public class MonsterAI : MonoBehaviour
     {
-        public enum State { Wander, Suspicious, Chase, Search, Catching }
+        public enum State { Wander, Suspicious, Chase, Search, Catching, Feasting }
         public State CurrentState { get; private set; } = State.Wander;
 
         [Header("Speed (m/s)")]
@@ -32,6 +32,8 @@ namespace GrillaPurgatory.Monster
         [Tooltip("Inside this distance it notices you even from behind (if nothing blocks the view).")]
         public float closeSenseRange = 4f;
         public float hearRadius = 16f;
+        [Tooltip("Noises quieter than this (0-1) are ignored completely: only big movements are heard.")]
+        public float hearThreshold = 0f;
         public float loseSightSeconds = 4f;
         public float searchSeconds = 4f;
 
@@ -48,9 +50,10 @@ namespace GrillaPurgatory.Monster
         public bool blind = false;
         [Tooltip("Noise loudness (0-1) at which it charges the source instead of just going to look.")]
         public float alertLoudness = 0.4f;
-        [Tooltip("Moving your body slower than this (m/s) makes no noise; faster rustles louder and louder.")]
-        public float quietBodySpeed = 1.2f;
-        public float loudBodySpeed = 6f;
+        [Tooltip("Moving your body slower than this (m/s) makes no noise; faster rustles louder and louder. " +
+                 "Tiptoeing stays under it.")]
+        public float quietBodySpeed = 2f;
+        public float loudBodySpeed = 7f;
         [Tooltip("How far a full-volume rustle carries (metres).")]
         public float bodyNoiseRadius = 30f;
 
@@ -74,21 +77,39 @@ namespace GrillaPurgatory.Monster
         Vector3 lastHeadPosition;
         bool haveLastHead;
 
+        /// <summary>The monster in the scene (there is one), so bots can look out for it.</summary>
+        public static MonsterAI Instance { get; private set; }
+
+        /// <summary>Navigation areas it may walk on. It never enters area 2, which is the dome's interior.</summary>
+        int AreaMask { get { return agent.areaMask; } }
+
         void Awake()
         {
+            Instance = this;
             agent = GetComponent<NavMeshAgent>();
+            agent.areaMask &= ~(1 << 2);   // the dome's interior is area 2 ("Jump"), kept for the bots and you
             // Older scenes built before the heartbeat existed won't have it on the prefab
             if (GetComponent<HeartbeatProximity>() == null) gameObject.AddComponent<HeartbeatProximity>();
             int playerLayer = LayerMask.NameToLayer("Player");
             if (playerLayer >= 0) sightMask = ~(1 << playerLayer);
         }
 
-        void OnEnable() { Player.HandStrike += OnHandStrike; }
-        void OnDisable() { Player.HandStrike -= OnHandStrike; }
+        void OnEnable()
+        {
+            Player.HandStrike += OnHandStrike;
+            NoiseBus.Noise += OnBotNoise;
+        }
+
+        void OnDisable()
+        {
+            Player.HandStrike -= OnHandStrike;
+            NoiseBus.Noise -= OnBotNoise;
+            if (Instance == this) Instance = null;
+        }
 
         void Start()
         {
-            if (!agent.isOnNavMesh && NavMesh.SamplePosition(transform.position, out var hit, 20f, NavMesh.AllAreas))
+            if (!agent.isOnNavMesh && NavMesh.SamplePosition(transform.position, out var hit, 20f, AreaMask))
                 agent.Warp(hit.position);
             if (!agent.isOnNavMesh)
                 Debug.LogWarning("[Monster] Not on a NavMesh. Run Grilla Purgatory > 4. Add Monster and Bake NavMesh.");
@@ -137,10 +158,17 @@ namespace GrillaPurgatory.Monster
             HearNoise(position, loudness, hearRadius);
         }
 
+        // Other players (the bots) make noise too
+        void OnBotNoise(Vector3 position, float loudness)
+        {
+            HearNoise(position, loudness, hearRadius);
+        }
+
         /// <summary>A noise at 'position'. It carries 'radius' metres at full loudness, less when quieter.</summary>
         void HearNoise(Vector3 position, float loudness, float radius)
         {
-            if (CurrentState == State.Catching) return;
+            if (CurrentState == State.Catching || CurrentState == State.Feasting) return;
+            if (loudness < hearThreshold) return;    // too small a movement to hear: tiptoeing is silent
             if (SafeZone.IsInside(position)) return; // noise in the safe zone doesn't carry
             if (Vector3.Distance(transform.position, position) > radius * loudness) return;
 
@@ -185,8 +213,10 @@ namespace GrillaPurgatory.Monster
 
         void Update()
         {
-            if (CurrentState == State.Catching || !agent.isOnNavMesh) return;
+            if (CurrentState == State.Catching || CurrentState == State.Feasting || !agent.isOnNavMesh) return;
             if (!FindPlayer()) { Wander(); return; }
+
+            if (TryCatchBot()) return;
 
             // Inside a safe zone it can neither see nor catch you (and it can't walk in: the zone is cut out of the NavMesh)
             bool safe = SafeZone.IsInside(playerHead.position);
@@ -275,7 +305,7 @@ namespace GrillaPurgatory.Monster
             for (int i = 0; i < 10; i++)
             {
                 Vector3 random = transform.position + Random.insideUnitSphere * wanderRadius;
-                if (NavMesh.SamplePosition(random, out var hit, 20f, NavMesh.AllAreas))
+                if (NavMesh.SamplePosition(random, out var hit, 20f, AreaMask))
                 {
                     agent.SetDestination(hit.position);
                     return;
@@ -285,7 +315,7 @@ namespace GrillaPurgatory.Monster
 
         void GoTo(Vector3 point)
         {
-            if (NavMesh.SamplePosition(point, out var hit, 8f, NavMesh.AllAreas)) agent.SetDestination(hit.position);
+            if (NavMesh.SamplePosition(point, out var hit, 8f, AreaMask)) agent.SetDestination(hit.position);
         }
 
         bool Arrived()
@@ -294,6 +324,55 @@ namespace GrillaPurgatory.Monster
         }
 
         // ------------------------------------------------------------------ catching
+
+        /// <summary>Other players are on the menu too. Returns true if it just caught one.</summary>
+        bool TryCatchBot()
+        {
+            foreach (var bot in BotPlayer.All)
+            {
+                if (bot.IsDead || SafeZone.IsInside(bot.Position)) continue;
+                Vector3 d = bot.Position - transform.position;
+                float dy = d.y;
+                d.y = 0f;
+                if (d.magnitude > catchDistance || dy > catchHeight) continue;
+
+                StartCoroutine(FeastRoutine(bot));
+                return true;
+            }
+            return false;
+        }
+
+        IEnumerator FeastRoutine(BotPlayer bot)
+        {
+            var previous = CurrentState;
+            CurrentState = State.Feasting;
+            agent.isStopped = true;
+            agent.velocity = Vector3.zero;
+
+            Vector3 flat = Vector3.ProjectOnPlane(bot.Position - transform.position, Vector3.up);
+            if (flat.sqrMagnitude > 0.001f) transform.rotation = Quaternion.LookRotation(flat);
+            if (monsterAnimator != null) { monsterAnimator.chasing = false; monsterAnimator.attacking = true; }
+
+            bot.Eaten();
+
+            // You can hear it happen, wherever you are in range
+            var go = new GameObject("Feast Sound");
+            go.transform.position = transform.position;
+            var src = go.AddComponent<AudioSource>();
+            src.clip = DeathCutscene.EatingClip(4f);
+            src.spatialBlend = 1f;
+            src.rolloffMode = AudioRolloffMode.Linear;
+            src.minDistance = 3f;
+            src.maxDistance = 70f;
+            src.Play();
+            Destroy(go, 4.5f);
+
+            yield return new WaitForSeconds(3.5f);
+
+            if (monsterAnimator != null) monsterAnimator.attacking = false;
+            agent.isStopped = false;
+            EnterState(State.Wander);
+        }
 
         IEnumerator CatchRoutine()
         {
@@ -346,13 +425,13 @@ namespace GrillaPurgatory.Monster
             {
                 Vector2 c = Random.insideUnitCircle.normalized * Random.Range(respawnMinDistance, respawnMaxDistance);
                 Vector3 candidate = spawnPoint + new Vector3(c.x, 0f, c.y);
-                if (NavMesh.SamplePosition(candidate, out var hit, 30f, NavMesh.AllAreas))
+                if (NavMesh.SamplePosition(candidate, out var hit, 30f, AreaMask))
                 {
                     agent.Warp(hit.position);
                     return;
                 }
             }
-            if (NavMesh.SamplePosition(transform.position, out var near, 30f, NavMesh.AllAreas)) agent.Warp(near.position);
+            if (NavMesh.SamplePosition(transform.position, out var near, 30f, AreaMask)) agent.Warp(near.position);
         }
     }
 }

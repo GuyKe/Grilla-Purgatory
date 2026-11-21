@@ -33,6 +33,25 @@ namespace GrillaPurgatory.Game
             return false;
         }
 
+        /// <summary>The closest safe zone to a point (for bots that want to run home).</summary>
+        public static bool TryGetNearest(Vector3 from, out Vector3 center, out float radius)
+        {
+            center = Vector3.zero;
+            radius = 0f;
+            float best = float.MaxValue;
+            bool found = false;
+            foreach (var zone in Zones)
+            {
+                float d = (zone.transform.position - from).sqrMagnitude;
+                if (d >= best) continue;
+                best = d;
+                center = zone.transform.position;
+                radius = zone.radius;
+                found = true;
+            }
+            return found;
+        }
+
         void Update()
         {
             var player = Player.Instance;

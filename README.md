@@ -222,3 +222,27 @@ Unity -batchmode -quit -projectPath . -executeMethod GrillaPurgatory.Setup.Build
 ```
 In the editor, pressing Play runs whichever scene is open: after menu **8** that is `Dome.unity`. To switch back, open
 `Assets/_Project/Scenes/Field.unity`.
+
+## Rooms and bots
+**ROOM tab on the computer.** The computer has two tabs now: GRAPHICS and ROOM. On ROOM, type a join code on the on-screen
+keyboard (touch the keys with your hand), then press **JOIN**. **LEAVE ROOM** takes you back to playing solo.
+
+**Code `BOTS`** (the sign beside the computer says who it's for: "Join code BOTS if you're a scardy cat"). It fills the
+world with 5 computer-controlled players:
+- **Honest note:** there is no online server. The BOTS room runs entirely on your device, and the bots are simulated
+  players. Any other code says "No server found". `RoomService` is the one place a real networking layer could be added.
+- They look like you (the ape, in different fur colours), with a **name tag** and **chat bubbles** ("stay in the dome",
+  "sneaking...", "RUN!!"). They shuffle around the dome, glance about, beat their chests, and some are braver than
+  others: bold ones go out into the field, nervous ones stay put.
+- They **run, or tiptoe when the monster is near**, and every fist they plant makes noise as loud as their speed, so the
+  monster hears them and hunts them just like you. If it panics them they **run for the dome**. If it catches one it
+  eats them (you can hear it from far off, and while it feasts for a few seconds it ignores you), and the player
+  reappears in the dome 9-15 s later, a bit warier.
+- Joining in a map with no bot room says so. Existing scenes: **Grilla Purgatory -> 9. Add Bot Room to Current Scene**.
+  Rebuild the dome with menu **8** to get the new sign, tab and bots.
+
+**Only big movements alert the monster.** Noises below `hearThreshold` (0.3) are ignored completely, and the loudness
+curves were widened: a hand touch is silent below 0.8 m/s and a full slap at 4 m/s (`Player.quietHandSpeed` /
+`loudHandSpeed`); your body is silent below 2 m/s and loud by 7 m/s (`MonsterAI.quietBodySpeed` / `loudBodySpeed`).
+**Tiptoe** (slow hand placements, slow body movement) and it won't notice you at all. A loud swing needs 0.6 loudness to
+make it charge; between 0.3 and 0.6 it only goes to look.

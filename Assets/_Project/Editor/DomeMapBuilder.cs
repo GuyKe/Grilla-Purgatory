@@ -59,6 +59,9 @@ namespace GrillaPurgatory.Setup
                 cam.backgroundColor = RenderSettings.fogColor;
             }
 
+            // The BOTS room: computer-controlled players that appear when you join it on the computer
+            BotBuilder.BuildRoom(Vector3.zero, 8f);
+
             // A mirror beside the spawn, then the monster (this bakes the NavMesh, so it goes last)
             MirrorBuilder.AddToScene(DomeBuilder.Spawn + new Vector3(2.4f, 0f, 1.4f), DomeBuilder.Spawn);
             MonsterBuilder.AddToScene(true);

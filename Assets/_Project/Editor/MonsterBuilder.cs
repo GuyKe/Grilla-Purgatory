@@ -250,6 +250,8 @@ namespace GrillaPurgatory.Setup
                 ai.searchSpeed = 4.5f;
                 ai.chaseSpeed = 11f;           // faster than any launch: you can't outrun it, only stay quiet or get out of reach
                 ai.hearRadius = 45f;
+                ai.hearThreshold = 0.3f;       // only big movements are heard: tiptoeing is silent
+                ai.alertLoudness = 0.6f;       // and only a loud one makes it charge
                 ai.loseSightSeconds = 6f;      // how long it keeps hunting after the last noise
                 ai.searchSeconds = 6f;
                 ai.catchDistance = 1.9f;
