@@ -10,7 +10,7 @@ namespace GrillaPurgatory.Game
     /// </summary>
     public static class GraphicsSettingsService
     {
-        public enum Setting { RenderScale, AntiAliasing, Grass, ViewDistance, Textures }
+        public enum Setting { RenderScale, AntiAliasing, Grass, ViewDistance, Textures, Mirror }
 
         public static readonly string[] PresetNames = { "LOW", "MEDIUM", "HIGH", "ULTRA" };
 
@@ -21,14 +21,16 @@ namespace GrillaPurgatory.Game
         static readonly float[] GrassDistance = { 0f, 15f, 25f, 40f };
         static readonly float[] ViewDistances = { 40f, 60f, 90f, 120f };
         static readonly string[] TextureNames = { "Low", "Medium", "High" };
+        static readonly string[] MirrorNames = { "Off", "Low", "High" };
+        static readonly int[] MirrorHeights = { 0, 256, 512 };   // reflection texture height in pixels (0 = mirror off)
 
-        // Order matches Setting: render scale, AA, grass, view distance, textures
+        // Order matches Setting: render scale, AA, grass, view distance, textures, mirror
         static readonly int[][] Presets =
         {
-            new[] { 0, 0, 1, 0, 0 },   // LOW
-            new[] { 1, 1, 2, 1, 1 },   // MEDIUM
-            new[] { 2, 2, 2, 2, 2 },   // HIGH
-            new[] { 3, 2, 3, 3, 2 },   // ULTRA
+            new[] { 0, 0, 1, 0, 0, 0 },   // LOW
+            new[] { 1, 1, 2, 1, 1, 1 },   // MEDIUM
+            new[] { 2, 2, 2, 2, 2, 2 },   // HIGH
+            new[] { 3, 2, 3, 3, 2, 2 },   // ULTRA
         };
 
         static int[] values = (int[])Presets[1].Clone();
@@ -41,6 +43,9 @@ namespace GrillaPurgatory.Game
             Apply();
         }
 
+        /// <summary>Height in pixels of the mirror's reflection texture; 0 means the mirror is switched off.</summary>
+        public static int MirrorHeight { get { return MirrorHeights[values[(int)Setting.Mirror]]; } }
+
         public static int Count(Setting s)
         {
             switch (s)
@@ -49,7 +54,8 @@ namespace GrillaPurgatory.Game
                 case Setting.AntiAliasing: return MsaaLevels.Length;
                 case Setting.Grass: return GrassNames.Length;
                 case Setting.ViewDistance: return ViewDistances.Length;
-                default: return TextureNames.Length;
+                case Setting.Textures: return TextureNames.Length;
+                default: return MirrorNames.Length;
             }
         }
 
@@ -62,7 +68,8 @@ namespace GrillaPurgatory.Game
                 case Setting.AntiAliasing: return MsaaLevels[i] == 1 ? "Off" : MsaaLevels[i] + "x";
                 case Setting.Grass: return GrassNames[i];
                 case Setting.ViewDistance: return Mathf.RoundToInt(ViewDistances[i]) + " m";
-                default: return TextureNames[i];
+                case Setting.Textures: return TextureNames[i];
+                default: return MirrorNames[i];
             }
         }
 

@@ -213,6 +213,7 @@ namespace GrillaPurgatory.Setup
 
             ComputerBuilder.AddToScene();
             SafeZoneBuilder.AddToScene();
+            MirrorBuilder.AddToScene();
             MonsterBuilder.AddToScene(); // bakes the NavMesh too, so it must come after the terrain, trees, rig and desk
 
             EditorSceneManager.SaveScene(scene, ScenePath);
@@ -304,6 +305,9 @@ namespace GrillaPurgatory.Setup
             arms.leftHand = leftFollower;
             arms.rightHand = rightFollower;
             arms.material = GetOrCreateMaterial("Arm_Placeholder", new Color(0.18f, 0.14f, 0.12f));
+
+            // Furry ape body, head and fists over the placeholder arms and hand spheres
+            AvatarBuilder.Build(rigGo);
         }
 
         /// <summary>Practice area for each technique: ice, a wall, a pinch-climb chimney and two trees.</summary>

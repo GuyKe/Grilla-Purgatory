@@ -160,3 +160,20 @@ cutscene restores your heading and un-freezes your body before the respawn.
 - **Closer monster:** it starts 24-36 m from where you spawn and reappears 24-36 m away after you die
   (`respawnMinDistance` / `respawnMaxDistance` on `MonsterAI`). You still spawn inside the safe zone.
   Re-run menu **4** on an existing scene to move its starting position.
+
+## Player avatar and mirror
+**Avatar** (`AvatarBuilder`, `PlayerAvatar`): an original ape of your own, not a copy of any other game's character. A
+big round chestnut-furred head with a tan face, brow, ears and eyes; a chunky furry torso and belly that hangs under your
+head and turns to follow where you look; thick furry arms from the shoulders; fists with knuckles and a thumb. No legs.
+- Looking down you see your own chest and arms. Your **own head is hidden from your own camera** (it would block your
+  view) but shows in mirrors.
+- The fists tint **blue** if a controller isn't tracked and a bit **darker** while that hand is touching a surface.
+
+**Mirror** (`MirrorSurface`): a standing mirror just to the right of the spawn point, facing it, inside the safe zone.
+It is a real reflection: a second camera sits at the mirror image of your eye and looks through the glass, fitted to the
+glass edges so it is correct from any angle. To save performance it only renders when you are within 7 m and looking
+toward it. Change its quality, or switch it off, on the graphics computer (**MIRROR: Off / Low / High**, part of the
+quality presets). It shows one view from the centre of your head, so there is no 3D depth in the reflection.
+
+- Fresh scene: menu **2** builds both. Existing scene: run **7. Add Player Avatar and Mirror**, then **4. Add Monster and
+  Bake NavMesh** (rebakes around the solid mirror frame), then save.

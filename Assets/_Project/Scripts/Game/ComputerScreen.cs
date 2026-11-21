@@ -31,7 +31,7 @@ namespace GrillaPurgatory.Game
         }
 
         readonly List<Button> buttons = new List<Button>();
-        readonly Text[] valueLabels = new Text[5];
+        readonly Text[] valueLabels = new Text[6];
 
         void Awake()
         {
@@ -60,11 +60,11 @@ namespace GrillaPurgatory.Game
             }
 
             // One row per setting: label, [-], value, [+]
-            string[] names = { "RESOLUTION", "ANTI-ALIASING", "GRASS", "VIEW DISTANCE", "TEXTURES" };
+            string[] names = { "RESOLUTION", "ANTI-ALIASING", "GRASS", "VIEW DISTANCE", "TEXTURES", "MIRROR" };
             for (int i = 0; i < names.Length; i++)
             {
                 var setting = (GraphicsSettingsService.Setting)i;
-                float y = 80f - i * 72f;
+                float y = 92f - i * 62f;
                 UiKit.MakeText(names[i], root, new Vector2(-270, y), new Vector2(360, 60), 32, Green, TextAnchor.MiddleLeft);
                 AddButton(root, "-", new Vector2(0, y), new Vector2(70, 56), 40, () => Step(setting, -1));
                 valueLabels[i] = UiKit.MakeText("", root, new Vector2(170, y), new Vector2(260, 60), 34, Color.white);

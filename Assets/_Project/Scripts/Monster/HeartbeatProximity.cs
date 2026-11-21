@@ -109,6 +109,8 @@ namespace GrillaPurgatory.Monster
 
             dome = new GameObject("Fear Vignette");
             dome.transform.SetParent(head, false);
+            int mirrorLayer = LayerMask.NameToLayer("MirrorSurface");   // that layer isn't drawn by the mirror camera
+            if (mirrorLayer >= 0) dome.layer = mirrorLayer;
             dome.AddComponent<MeshFilter>().sharedMesh = MakeDomeMesh();
             vignetteRenderer = dome.AddComponent<MeshRenderer>();
             vignetteRenderer.sharedMaterial = vignette;
