@@ -1,5 +1,6 @@
 using System.Collections;
 using GorillaLocomotion;
+using GrillaPurgatory.Game;
 using UnityEngine;
 using UnityEngine.AI;
 
@@ -113,6 +114,7 @@ namespace GrillaPurgatory.Monster
         void OnHandStrike(Vector3 position, float loudness)
         {
             if (CurrentState == State.Chase || CurrentState == State.Catching) return;
+            if (SafeZone.IsInside(position)) return; // noise in the safe zone doesn't carry
             if (Vector3.Distance(transform.position, position) > hearRadius * loudness) return;
             searchTarget = position;
             EnterState(State.Suspicious);
@@ -125,13 +127,16 @@ namespace GrillaPurgatory.Monster
             if (CurrentState == State.Catching || !agent.isOnNavMesh) return;
             if (!FindPlayer()) { Wander(); return; }
 
-            if (InCatchRange())
+            // Inside a safe zone it can neither see nor catch you (and it can't walk in: the zone is cut out of the NavMesh)
+            bool safe = SafeZone.IsInside(playerHead.position);
+
+            if (!safe && InCatchRange())
             {
                 StartCoroutine(CatchRoutine());
                 return;
             }
 
-            bool sees = CanSee();
+            bool sees = !safe && CanSee();
             if (sees)
             {
                 lastSeen = playerHead.position;

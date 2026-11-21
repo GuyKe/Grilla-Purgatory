@@ -133,3 +133,17 @@ scene). **Reach out and touch the screen with a hand** to press a button. You ca
 
 Settings apply immediately, are saved between launches, and are applied again at startup. The defaults suit a Quest;
 raise them on PC VR. Logic is in `GraphicsSettingsService`, the menu in `ComputerScreen`.
+
+## Safe zone
+A ring of standing stones with a glowing floor ring and a lantern surrounds the **graphics computer and the spawn
+point**. Inside it the monster can't see, hear or catch you, and it can't walk in (the area is cut out of the NavMesh),
+so it prowls around the edge instead. You respawn here after dying, and both controllers buzz when you cross the edge.
+
+- Fresh scene: menu **2** builds it. Existing scene: run **6. Add Safe Zone**, then **4. Add Monster and Bake NavMesh**
+  (the NavMesh has to be rebaked so the monster is kept out). Save the scene afterwards.
+- Size and position: `SafeZoneBuilder.cs` (radius 4 m). It is halfway between the spawn point and the computer.
+
+## Fixed: hard to move after dying
+After a respawn the locomotion kept its old running speed average, so every hand touch pushed you in the direction
+you had been moving when you died. `Player.InitializeValues` now clears the speed average and contact state, and the
+cutscene restores your heading and un-freezes your body before the respawn.

@@ -212,6 +212,7 @@ namespace GrillaPurgatory.Setup
             CreateRig();
 
             ComputerBuilder.AddToScene();
+            SafeZoneBuilder.AddToScene();
             MonsterBuilder.AddToScene(); // bakes the NavMesh too, so it must come after the terrain, trees, rig and desk
 
             EditorSceneManager.SaveScene(scene, ScenePath);

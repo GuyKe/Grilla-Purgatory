@@ -102,6 +102,14 @@ namespace GorillaLocomotion
             lastHeadPosition = headCollider.transform.position;
             velocityIndex = 0;
             lastPosition = transform.position;
+
+            // Clear the running speed average and contact state too. InitializeValues is also used after a
+            // respawn; without this the old speed lingers forever (the history is zeroed, so it is never
+            // subtracted back out) and every hand touch launches you the wrong way.
+            denormalizedVelocityAverage = Vector3.zero;
+            currentVelocity = Vector3.zero;
+            wasLeftHandTouching = false;
+            wasRightHandTouching = false;
         }
 
         private Vector3 CurrentLeftHandPosition()

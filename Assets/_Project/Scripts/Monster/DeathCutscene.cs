@@ -33,6 +33,7 @@ namespace GrillaPurgatory.Monster
             var rig = player.transform;
             var rb = rig.GetComponent<Rigidbody>();
             var anim = monster.monsterAnimator;
+            Quaternion startRotation = rig.rotation;
 
             // Freeze the player's body
             if (rb != null) { rb.linearVelocity = Vector3.zero; rb.isKinematic = true; }
@@ -163,8 +164,9 @@ namespace GrillaPurgatory.Monster
                 audio.Stop();
 
                 // ---------------------------------------------------------------- 4. you wake up
+                rig.rotation = startRotation;            // undo the turn toward the monster
+                if (rb != null) rb.isKinematic = false;  // must be dynamic before the respawn zeroes its velocity
                 respawn?.Invoke();
-                if (rb != null) rb.isKinematic = false;
 
                 SetOverlay(overlay, new Color(0f, 0f, 0f, 1f));      // hold black while the world comes back
                 if (cam != null)

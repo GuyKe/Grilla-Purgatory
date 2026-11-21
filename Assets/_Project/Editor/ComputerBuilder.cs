@@ -14,7 +14,7 @@ namespace GrillaPurgatory.Setup
     public static class ComputerBuilder
     {
         // Beside the start point, a little to the left, turned to face where you spawn
-        static readonly Vector3 Position = new Vector3(-2.4f, 0f, 2.0f);
+        internal static readonly Vector3 Position = new Vector3(-2.4f, 0f, 2.0f);
 
         [MenuItem("Grilla Purgatory/5. Add Graphics Computer", priority = 5)]
         public static void AddToCurrentScene()
