@@ -148,10 +148,15 @@ After a respawn the locomotion kept its old running speed average, so every hand
 you had been moving when you died. `Player.InitializeValues` now clears the speed average and contact state, and the
 cutscene restores your heading and un-freezes your body before the respawn.
 
-## Heartbeat and closer monster
-- **Heartbeat** (`HeartbeatProximity`): inside 25 m of the monster you hear your own heartbeat and feel it in both
-  controllers. It gets louder and faster as the monster closes in, and starts whenever it is hunting you, even far
-  away. It goes quiet inside the safe zone. Tuning is on the component (range, beat speed, volume, rumble).
-- **Closer monster:** it now starts 24-36 m from where you spawn (was 50-75 m), and reappears 24-36 m away after
-  you die (`respawnMinDistance` / `respawnMaxDistance` on `MonsterAI`). You still spawn inside the safe zone.
+## Heartbeat, dark edges and a closer monster
+- **Heartbeat** (`HeartbeatProximity`): inside 25 m of the monster you hear a quiet heartbeat that gets faster and a bit
+  louder the closer it gets (about one beat a second far away, three a second when it's on top of you). There is no
+  controller vibration. It also starts whenever the monster is hunting you, even from far away.
+- **Dark edges:** the edges of your view darken as it gets closer, leaving the centre clear, up to nearly black at the
+  rim when it's right next to you. It eases in and out rather than snapping.
+- Both fade out inside the safe zone, and the death cutscene takes over when you're caught.
+- Tuning is on the `HeartbeatProximity` component: range, beat speeds, volume (`minVolume`/`maxVolume`), `maxDarkness`,
+  and how much of the view stays clear (`clearAngle`/`darkAngle`).
+- **Closer monster:** it starts 24-36 m from where you spawn and reappears 24-36 m away after you die
+  (`respawnMinDistance` / `respawnMaxDistance` on `MonsterAI`). You still spawn inside the safe zone.
   Re-run menu **4** on an existing scene to move its starting position.
