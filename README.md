@@ -91,3 +91,25 @@ Menu item **2** now builds the field with a real terrain; to add it to a scene y
   **3** to replant. Tune counts/spacing at the top of `ForestBuilder.cs`.
 - **Sliding fix:** the body now has friction (`Player.bodyFriction`, default 0.9), so you stop after a launch
   instead of coasting. Only the **Ice** patch is slippery (it has its own near-zero friction material).
+
+## The monster
+An original creature ("The Hollow") built entirely from code: a hunched, starved thing taller than you, with
+arms long enough to drag its knuckles, exposed ribs through a torn chest, a gaping fanged jaw, glowing eyes and
+blood spattered on its body, dripping from its mouth and claws. Menu item **2** adds it (and bakes the NavMesh
+it walks on); to add it to an existing scene run **Grilla Purgatory → 4. Add Monster and Bake NavMesh**
+(run 3 first if the terrain/trees aren't there, then save the scene).
+
+**Behaviour** (`MonsterAI`):
+| State | What it does |
+|---|---|
+| Wander | Roams the field slowly |
+| Suspicious | **Hears your hand strikes** within ~16 m and goes to check |
+| Chase | Sees you (line of sight, ~35 m, 130° view, or very close) and hunts you at 5.5 m/s |
+| Search | Loses you for 4 s, checks where it last saw you, then gives up |
+| Catch | Reaches you: it lunges, the screen cuts to black, you respawn at the start and it is moved far away |
+
+It uses the NavMesh and **can't jump**, so high ground (a branch, a ledge, the top of a wall) keeps you out of reach.
+Trees and walls block its view. Staying quiet matters: every hand strike makes noise.
+Chase speed is deliberately a little below a good launch (~6.5 m/s) so skilled movement escapes it.
+All tuning is on the `MonsterAI` component. Movement and sound (footfalls, growl) are procedural: no animation
+clips or audio files. Generated assets are in `Assets/_Project/Art/Monster/` and `Prefabs/Monster.prefab`.

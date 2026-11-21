@@ -68,8 +68,8 @@ Assets/_Project/
 - [x] **2. Locomotion** — uses Another-Axiom/GorillaLocomotion (MIT) + body fitter so you stand on the ground. *(scaffolded; tune in headset; haptics/sound still to add)*
   - Added: visible arms, surface slip presets, arm-span calibration (T-pose + both grips), test course for ground running, wall running, pinch climbing and branching.
 - [~] **3. Field** — terrain, grass layers and grass blades done *(scaffolded; verify look and fps on Quest)*; boundary, baked lighting, trees/rocks still to do.
-- [ ] **4. Monster v1** — NavMesh, wander + chase, catch, respawn.
-- [ ] **5. Monster v2** — line of sight, noise hearing, search, audio, animation.
+- [x] **4. Monster v1** — NavMesh, wander + chase, catch, respawn. *(scaffolded; tune in headset)*
+- [x] **5. Monster v2** — line of sight, noise hearing, search, audio, animation. *(done procedurally; heartbeat/proximity rumble still to add)*
 - [ ] **6. Game loop** — start screen, survival timer, death screen, best time.
 - [ ] **7. Polish** — optimization (<~100 draw calls), sound design, comfort options.
 

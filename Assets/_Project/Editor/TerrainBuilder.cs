@@ -357,7 +357,7 @@ namespace GrillaPurgatory.Setup
             return AssetDatabase.LoadAssetAtPath<Texture2D>(AssetDatabase.GetAssetPath(tex));
         }
 
-        static Texture2D SaveTexture(string name, Color[] pixels, int size, bool isNormalMap)
+        internal static Texture2D SaveTexture(string name, Color[] pixels, int size, bool isNormalMap, string folder = null)
         {
             var tex = new Texture2D(size, size, TextureFormat.RGBA32, false);
             tex.SetPixels(pixels);
@@ -365,7 +365,7 @@ namespace GrillaPurgatory.Setup
             byte[] png = tex.EncodeToPNG();
             Object.DestroyImmediate(tex);
 
-            string path = TexFolder + "/" + name + ".png";
+            string path = (folder ?? TexFolder) + "/" + name + ".png";
             File.WriteAllBytes(path, png);
             AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceUpdate);
 
@@ -385,7 +385,7 @@ namespace GrillaPurgatory.Setup
             return AssetDatabase.LoadAssetAtPath<Texture2D>(path);
         }
 
-        static Color[] NormalFromHeight(float[] h, int size, float strength)
+        internal static Color[] NormalFromHeight(float[] h, int size, float strength)
         {
             var result = new Color[size * size];
             for (int y = 0; y < size; y++)
@@ -405,7 +405,7 @@ namespace GrillaPurgatory.Setup
         // ---------------------------------------------------------------- tileable noise
 
         /// <summary>Fractal noise over u,v in [0,1) that tiles seamlessly. fx/fy = cells across at the first octave.</summary>
-        static float Fbm(float u, float v, int fx, int fy, int octaves, int seed)
+        internal static float Fbm(float u, float v, int fx, int fy, int octaves, int seed)
         {
             float sum = 0f, amp = 1f, total = 0f;
             for (int o = 0; o < octaves; o++)

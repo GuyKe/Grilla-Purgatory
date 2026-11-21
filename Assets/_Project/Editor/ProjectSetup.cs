@@ -211,6 +211,8 @@ namespace GrillaPurgatory.Setup
 
             CreateRig();
 
+            MonsterBuilder.AddToScene(); // bakes the NavMesh too, so it must come after the terrain, trees and rig
+
             EditorSceneManager.SaveScene(scene, ScenePath);
             var scenes = EditorBuildSettings.scenes.Where(s => s.path != ScenePath).ToList();
             scenes.Insert(0, new EditorBuildSettingsScene(ScenePath, true));
@@ -402,7 +404,7 @@ namespace GrillaPurgatory.Setup
         }
 
         /// <summary>Returns the index of the named layer, creating it in the first free user slot if needed.</summary>
-        static int EnsureLayer(string layerName)
+        internal static int EnsureLayer(string layerName)
         {
             int existing = LayerMask.NameToLayer(layerName);
             if (existing >= 0) return existing;

@@ -53,6 +53,9 @@ namespace GorillaLocomotion
 
         public bool disableMovement = false;
 
+        /// <summary>Raised when a hand newly touches a surface: world position and loudness (1 = normal).</summary>
+        public static event System.Action<Vector3, float> HandStrike;
+
         [Tooltip("Friction of the body against the ground. Higher stops sliding sooner. Ice overrides it.")]
         public float bodyFriction = 0.9f;
 
@@ -284,6 +287,10 @@ namespace GorillaLocomotion
 
             leftHandFollower.position = lastLeftHandPosition;
             rightHandFollower.position = lastRightHandPosition;
+
+            // Hand strikes make noise that monsters can hear (see MonsterAI)
+            if (leftHandColliding && !wasLeftHandTouching) HandStrike?.Invoke(lastLeftHandPosition, 1f);
+            if (rightHandColliding && !wasRightHandTouching) HandStrike?.Invoke(lastRightHandPosition, 1f);
 
             wasLeftHandTouching = leftHandColliding;
             wasRightHandTouching = rightHandColliding;
