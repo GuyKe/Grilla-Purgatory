@@ -263,7 +263,7 @@ namespace GrillaPurgatory.Setup
             body.radius = 0.12f;
             body.sharedMaterial = frictionless;
             head.sharedMaterial = frictionless;
-            var fitter = bodyGo.AddComponent<BodyColliderFitter>();
+            var fitter = bodyGo.AddComponent<GorillaLocomotion.BodyColliderFitter>();
             fitter.floorReference = rigGo.transform;
 
             // Tracked controllers (invisible) + followers (what you see; clamped by surfaces)
