@@ -197,13 +197,8 @@ namespace GrillaPurgatory.Setup
             RenderSettings.fogStartDistance = 15f;
             RenderSettings.fogEndDistance = 60f;
 
-            // Placeholder ground (replaced by a grass terrain in milestone 3)
-            var grassMat = GetOrCreateMaterial("Grass_Placeholder", new Color(0.24f, 0.5f, 0.2f));
-            var ground = GameObject.CreatePrimitive(PrimitiveType.Plane);
-            ground.name = "Ground";
-            ground.transform.localScale = new Vector3(20f, 1f, 20f);
-            ground.isStatic = true;
-            ground.GetComponent<Renderer>().sharedMaterial = grassMat;
+            // Hilly grass terrain (flat start area at y = 0), see TerrainBuilder
+            TerrainBuilder.CreateFieldTerrain();
 
             // A few blocks to test climbing later
             var rockMat = GetOrCreateMaterial("Rock_Placeholder", new Color(0.4f, 0.4f, 0.42f));

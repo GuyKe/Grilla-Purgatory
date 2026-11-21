@@ -72,3 +72,15 @@ same reach and leverage. It's saved and reused next launch; until you do it, not
 
 **Height.** You're lowered by 0.6 m in the game so your hands reach the ground without crouching.
 Change `heightReduction` on the `Camera Offset` object's `XRTrackingSpace` component (0 = your real height).
+
+## Terrain and grass (Milestone 3)
+Menu item **2** now builds the field with a real terrain; to add it to a scene you already have, run
+**Grilla Purgatory → 3. Build Grass Terrain in Current Scene** (it replaces the old flat "Ground").
+
+- 200 × 200 m, with rolling hills, bumps and a ring of high ground at the edge. The area within ~32 m of the
+  start is flat, so the start point and the test course stay level (start = world y 0).
+- Grass, dirt and rock layers, each with a generated albedo and normal map (no downloaded art). Rock
+  appears on steep slopes, dirt in noisy patches, and the spawn point stays grassy.
+- Grass blades (alpha-tested tufts) are drawn only within 25 m of the player to keep Quest fast.
+- Generated files land in `Assets/_Project/Art/Terrain/`. Re-running the menu regenerates them.
+- Terrain tuning is at the top of `Assets/_Project/Editor/TerrainBuilder.cs` (size, hill height, flat radius).

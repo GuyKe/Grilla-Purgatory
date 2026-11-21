@@ -67,7 +67,7 @@ Assets/_Project/
 - [x] **1. Setup** — Unity 6 URP project, OpenXR, Android/Quest build settings, hello-world VR scene. *(scaffolded; verify in headset)*
 - [x] **2. Locomotion** — uses Another-Axiom/GorillaLocomotion (MIT) + body fitter so you stand on the ground. *(scaffolded; tune in headset; haptics/sound still to add)*
   - Added: visible arms, surface slip presets, arm-span calibration (T-pose + both grips), test course for ground running, wall running, pinch climbing and branching.
-- [ ] **3. Field** — terrain, grass, fog, boundary, baked lighting; hold 72/90 fps on Quest.
+- [~] **3. Field** — terrain, grass layers and grass blades done *(scaffolded; verify look and fps on Quest)*; boundary, baked lighting, trees/rocks still to do.
 - [ ] **4. Monster v1** — NavMesh, wander + chase, catch, respawn.
 - [ ] **5. Monster v2** — line of sight, noise hearing, search, audio, animation.
 - [ ] **6. Game loop** — start screen, survival timer, death screen, best time.
