@@ -224,7 +224,7 @@ namespace GrillaPurgatory.Setup
             Debug.Log("[Grilla Purgatory] Created " + ScenePath + " and added it to Build Settings.");
         }
 
-        static void CreateRig()
+        internal static void CreateRig()
         {
             int playerLayer = EnsureLayer("Player");
 

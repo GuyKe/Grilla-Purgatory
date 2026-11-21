@@ -12,6 +12,12 @@ namespace GrillaPurgatory.Setup
 
         public static void AddToScene()
         {
+            AddToScene(Position, Vector3.zero);
+        }
+
+        /// <summary>Builds the mirror at 'position', turned to face 'faceToward' (usually the spawn point).</summary>
+        public static void AddToScene(Vector3 position, Vector3 faceToward)
+        {
             var old = GameObject.Find("Mirror");
             if (old != null) Object.DestroyImmediate(old);
 
@@ -21,9 +27,9 @@ namespace GrillaPurgatory.Setup
             var glassMat = GetGlassMaterial();
 
             var root = new GameObject("Mirror").transform;
-            root.position = Position;
+            root.position = position;
             // local +Z points away from the viewer; the glass quad faces -Z, toward the spawn point
-            Vector3 away = Vector3.ProjectOnPlane(Position, Vector3.up).normalized;
+            Vector3 away = Vector3.ProjectOnPlane(position - faceToward, Vector3.up).normalized;
             root.rotation = Quaternion.LookRotation(away, Vector3.up);
 
             const float width = 1.1f, height = 1.5f, centerY = 1.0f;

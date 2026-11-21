@@ -43,6 +43,17 @@ namespace GrillaPurgatory.Monster
         [Header("Wandering")]
         public float wanderRadius = 45f;
 
+        [Header("Blind variant (hunts by sound only)")]
+        [Tooltip("No eyes: it never sees you. Every noise is a bearing it follows.")]
+        public bool blind = false;
+        [Tooltip("Noise loudness (0-1) at which it charges the source instead of just going to look.")]
+        public float alertLoudness = 0.4f;
+        [Tooltip("Moving your body slower than this (m/s) makes no noise; faster rustles louder and louder.")]
+        public float quietBodySpeed = 1.2f;
+        public float loudBodySpeed = 6f;
+        [Tooltip("How far a full-volume rustle carries (metres).")]
+        public float bodyNoiseRadius = 30f;
+
         [Header("Respawn")]
         [Tooltip("After you die, the monster reappears this far from your spawn point (metres).")]
         public float respawnMinDistance = 24f;
@@ -60,6 +71,8 @@ namespace GrillaPurgatory.Monster
         float lastSeenTime, nextPathTime, searchArrivedTime = -1f;
         float runStartTime;
         int sightMask = ~0;
+        Vector3 lastHeadPosition;
+        bool haveLastHead;
 
         void Awake()
         {
@@ -96,6 +109,7 @@ namespace GrillaPurgatory.Monster
 
         bool CanSee()
         {
+            if (blind) return false;
             Vector3 eye = eyes != null ? eyes.position : transform.position + Vector3.up * 2f;
             Vector3 to = playerHead.position - eye;
             float dist = to.magnitude;
@@ -120,11 +134,51 @@ namespace GrillaPurgatory.Monster
 
         void OnHandStrike(Vector3 position, float loudness)
         {
-            if (CurrentState == State.Chase || CurrentState == State.Catching) return;
+            HearNoise(position, loudness, hearRadius);
+        }
+
+        /// <summary>A noise at 'position'. It carries 'radius' metres at full loudness, less when quieter.</summary>
+        void HearNoise(Vector3 position, float loudness, float radius)
+        {
+            if (CurrentState == State.Catching) return;
             if (SafeZone.IsInside(position)) return; // noise in the safe zone doesn't carry
-            if (Vector3.Distance(transform.position, position) > hearRadius * loudness) return;
+            if (Vector3.Distance(transform.position, position) > radius * loudness) return;
+
+            if (blind)
+            {
+                // It can't see, so each noise is its only clue. A loud one makes it charge; a quiet one only draws it over.
+                lastSeen = position;
+                lastSeenTime = Time.time;
+                if (loudness >= alertLoudness)
+                {
+                    if (CurrentState != State.Chase) EnterState(State.Chase);
+                }
+                else if (CurrentState != State.Chase)
+                {
+                    searchTarget = position;
+                    EnterState(State.Suspicious);
+                }
+                return;
+            }
+
+            if (CurrentState == State.Chase) return;
             searchTarget = position;
             EnterState(State.Suspicious);
+        }
+
+        /// <summary>Rustling: the faster your body moves, the more noise it makes. Moving slowly is silent.</summary>
+        void ListenToBody()
+        {
+            float dt = Time.deltaTime;
+            Vector3 p = playerHead.position;
+            if (!haveLastHead || dt <= 0f) { lastHeadPosition = p; haveLastHead = true; return; }
+
+            float speed = (p - lastHeadPosition).magnitude / dt;
+            lastHeadPosition = p;
+            if (speed > 40f) return; // a teleport (respawn), not movement
+
+            float level = Mathf.InverseLerp(quietBodySpeed, loudBodySpeed, speed);
+            if (level > 0.05f) HearNoise(p, level, bodyNoiseRadius);
         }
 
         // ------------------------------------------------------------------ states
@@ -136,6 +190,7 @@ namespace GrillaPurgatory.Monster
 
             // Inside a safe zone it can neither see nor catch you (and it can't walk in: the zone is cut out of the NavMesh)
             bool safe = SafeZone.IsInside(playerHead.position);
+            if (blind) ListenToBody();
 
             if (!safe && InCatchRange())
             {

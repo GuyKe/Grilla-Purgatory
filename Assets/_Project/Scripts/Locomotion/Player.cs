@@ -53,8 +53,17 @@ namespace GorillaLocomotion
 
         public bool disableMovement = false;
 
-        /// <summary>Raised when a hand newly touches a surface: world position and loudness (1 = normal).</summary>
+        /// <summary>Raised when a hand newly touches a surface: world position and loudness (0 = silent, 1 = a
+        /// normal swing). Loudness comes from how fast the hand was moving, so setting your hands down slowly is quiet.</summary>
         public static event System.Action<Vector3, float> HandStrike;
+
+        [Header("Noise")]
+        [Tooltip("Hand speed (m/s) at or below which a touch makes no sound.")]
+        public float quietHandSpeed = 0.3f;
+        [Tooltip("Hand speed (m/s) at or above which a touch is a full-volume slap.")]
+        public float loudHandSpeed = 3f;
+
+        float leftHandSpeed, rightHandSpeed;
 
         [Tooltip("Friction of the body against the ground. Higher stops sliding sooner. Ice overrides it.")]
         public float bodyFriction = 0.9f;
@@ -164,6 +173,7 @@ namespace GorillaLocomotion
             //left hand
 
             Vector3 distanceTraveled = CurrentLeftHandPosition() - lastLeftHandPosition + Vector3.down * 2f * 9.8f * Time.deltaTime * Time.deltaTime;
+            leftHandSpeed = distanceTraveled.magnitude / Mathf.Max(Time.deltaTime, 0.0001f);
 
             if (IterativeCollisionSphereCast(lastLeftHandPosition, minimumRaycastDistance, distanceTraveled, defaultPrecision, out finalPosition, true))
             {
@@ -184,6 +194,7 @@ namespace GorillaLocomotion
             //right hand
 
             distanceTraveled = CurrentRightHandPosition() - lastRightHandPosition + Vector3.down * 2f * 9.8f * Time.deltaTime * Time.deltaTime;
+            rightHandSpeed = distanceTraveled.magnitude / Mathf.Max(Time.deltaTime, 0.0001f);
 
             if (IterativeCollisionSphereCast(lastRightHandPosition, minimumRaycastDistance, distanceTraveled, defaultPrecision, out finalPosition, true))
             {
@@ -297,8 +308,8 @@ namespace GorillaLocomotion
             rightHandFollower.position = lastRightHandPosition;
 
             // Hand strikes make noise that monsters can hear (see MonsterAI)
-            if (leftHandColliding && !wasLeftHandTouching) HandStrike?.Invoke(lastLeftHandPosition, 1f);
-            if (rightHandColliding && !wasRightHandTouching) HandStrike?.Invoke(lastRightHandPosition, 1f);
+            if (leftHandColliding && !wasLeftHandTouching) HandStrike?.Invoke(lastLeftHandPosition, StrikeLoudness(leftHandSpeed));
+            if (rightHandColliding && !wasRightHandTouching) HandStrike?.Invoke(lastRightHandPosition, StrikeLoudness(rightHandSpeed));
 
             wasLeftHandTouching = leftHandColliding;
             wasRightHandTouching = rightHandColliding;
@@ -388,6 +399,11 @@ namespace GorillaLocomotion
                 finalPosition = Vector3.zero;
                 return false;
             }
+        }
+
+        float StrikeLoudness(float handSpeed)
+        {
+            return Mathf.Clamp01(Mathf.InverseLerp(quietHandSpeed, loudHandSpeed, handSpeed));
         }
 
         public bool IsHandTouching(bool forLeftHand)

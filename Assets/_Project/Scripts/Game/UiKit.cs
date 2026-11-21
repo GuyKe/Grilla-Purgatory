@@ -18,6 +18,17 @@ namespace GrillaPurgatory.Game
             }
         }
 
+        /// <summary>
+        /// True when a hand (world position) is touching a world-space UI rectangle: inside its bounds and within
+        /// a few centimetres in front of it. The canvas faces -Z, so the viewer's side is local -Z.
+        /// </summary>
+        public static bool IsPoking(RectTransform rect, Vector3 handWorldPosition)
+        {
+            Vector3 local = rect.InverseTransformPoint(handWorldPosition);   // canvas pixels
+            float inFront = -local.z * rect.lossyScale.z;                    // metres on the viewer's side
+            return rect.rect.Contains(new Vector2(local.x, local.y)) && inFront > -0.02f && inFront < 0.10f;
+        }
+
         public static Canvas MakeWorldCanvas(string name, Transform parent, Vector2 pixelSize, float metersPerPixel)
         {
             var go = new GameObject(name);

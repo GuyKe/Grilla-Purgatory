@@ -177,3 +177,37 @@ quality presets). It shows one view from the centre of your head, so there is no
 
 - Fresh scene: menu **2** builds both. Existing scene: run **7. Add Player Avatar and Mirror**, then **4. Add Monster and
   Bake NavMesh** (rebakes around the solid mirror frame), then save.
+
+## Map 2: The Dome
+Run **Grilla Purgatory → 8. Create Dome Map Scene**. It builds `Assets/_Project/Scenes/Dome.unity` and puts it **first** in
+Build Settings, so a build starts here. (The original field is still `Field.unity`; open it from the Project window.)
+
+**The dome.** A huge hollow half-sphere of textured wood planks (24 m across, 12 m high) with an arched doorway and a
+skylight, a plank floor, and four warm lanterns. You start near the back wall. It is a **safe spot**: inside it the
+monster can't see, hear or catch you, and the interior is cut out of its walkable ground so it can't walk in. Your
+controllers buzz as you cross the edge.
+- The **graphics computer** (the same one as before) is mounted on the back wall, on a shelf with a keyboard.
+- Next to it, the **update log**: touch **< NEWER** / **OLDER >** to turn the pages. The text lives in `UpdateLog.cs`;
+  add a new `Entry` at the top of the list for each release.
+- A mirror stands beside your spawn point.
+
+**The field.** Walk out the door (it faces the way you start looking) into a 400 x 400 m grass plain: a few big gentle
+hills, a few dozen trees at least 34 m apart (every third is climbable), and high ground around the edge so the field
+has an end. Fog hides the distance.
+
+**The monster.** The same creature with **no eyes** (smooth scars where they were), **huge ears**, and a new brain
+(`MonsterAI.blind`):
+- It **can't see you at all**. It only reacts to **sound**.
+- **Noise comes from your hands and your body.** A hand hitting a surface is as loud as it was fast (a gentle placement
+  is silent, a hard slap is a full-volume bang). Your body rustles when it moves faster than ~1.2 m/s, louder as you
+  speed up to ~6 m/s.
+- A quiet sound only draws it over to look. A loud one (loudness over 0.4) makes it **charge the spot** at **11 m/s**,
+  faster than any launch. It keeps hunting while you keep making noise, then searches the last spot for a few seconds
+  and gives up.
+- **Walk slowly to stay hidden.** Stay quiet, get out of reach (it can't jump: use the trees), or run for the dome.
+- Starts 60-85 m away and respawns 55-85 m away after you die.
+- Tuning is on the monster's `MonsterAI` component (speeds, hearing radius, `alertLoudness`, body-noise speeds), and
+  `Player` has `quietHandSpeed` / `loudHandSpeed` for how hand speed maps to loudness.
+
+**Heads-up for the first map.** Hand strikes are now loudness-based everywhere, so the original monster also hears slow
+hand placements less far than before.

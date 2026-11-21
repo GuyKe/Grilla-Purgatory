@@ -21,6 +21,7 @@ namespace GrillaPurgatory.Setup
     {
         const string Folder = "Assets/_Project/Art/Monster";
         const string PrefabPath = "Assets/_Project/Prefabs/Monster.prefab";
+        const string BlindPrefabPath = "Assets/_Project/Prefabs/Monster_Blind.prefab";
 
         class Mats
         {
@@ -37,7 +38,8 @@ namespace GrillaPurgatory.Setup
             Debug.Log("[Grilla Purgatory] Monster added and NavMesh baked. Save the scene (Ctrl+S).");
         }
 
-        public static void AddToScene()
+        /// <param name="blind">The eyeless variant used in the dome map: no sight, huge ears, very fast, hunts by sound.</param>
+        public static void AddToScene(bool blind = false)
         {
             foreach (var name in new[] { "Monster", "NavMesh Surface" })
             {
@@ -47,10 +49,10 @@ namespace GrillaPurgatory.Setup
 
             BakeNavMesh();
 
-            var prefab = BuildMonsterPrefab();
+            var prefab = BuildMonsterPrefab(blind);
             var instance = (GameObject)PrefabUtility.InstantiatePrefab(prefab);
             instance.name = "Monster";
-            instance.transform.position = FindStartPoint();
+            instance.transform.position = FindStartPoint(blind);
         }
 
         static void BakeNavMesh()
@@ -64,12 +66,12 @@ namespace GrillaPurgatory.Setup
             surface.BuildNavMesh();
         }
 
-        static Vector3 FindStartPoint()
+        static Vector3 FindStartPoint(bool blind)
         {
             for (int i = 0; i < 50; i++)
             {
                 float angle = Random.value * Mathf.PI * 2f;
-                float radius = Random.Range(24f, 36f);   // close enough to feel it, far enough to start safe
+                float radius = blind ? Random.Range(60f, 85f) : Random.Range(24f, 36f);   // far enough to start safe
                 var p = new Vector3(Mathf.Cos(angle) * radius, 0f, Mathf.Sin(angle) * radius);
                 if (NavMesh.SamplePosition(p, out var hit, 10f, NavMesh.AllAreas) &&
                     new Vector2(hit.position.x, hit.position.z).magnitude > 14f)
@@ -81,7 +83,7 @@ namespace GrillaPurgatory.Setup
 
         // ---------------------------------------------------------------- prefab
 
-        static GameObject BuildMonsterPrefab()
+        static GameObject BuildMonsterPrefab(bool blind)
         {
             EnsureFolder(Folder);
             EnsureFolder("Assets/_Project/Prefabs");
@@ -163,8 +165,18 @@ namespace GrillaPurgatory.Setup
 
             for (int side = -1; side <= 1; side += 2)
             {
-                Prim(PrimitiveType.Sphere, "Eye Socket", head, new Vector3(side * 0.12f, 0.17f, 0.33f), Vector3.one * 0.15f, m.socket);
-                Prim(PrimitiveType.Sphere, "Eye", head, new Vector3(side * 0.12f, 0.17f, 0.385f), Vector3.one * 0.075f, m.eye);
+                if (blind)
+                {
+                    // No eyes: smooth skin where they would be, and huge ears instead
+                    Prim(PrimitiveType.Sphere, "Eye Scar", head, new Vector3(side * 0.12f, 0.17f, 0.33f), Vector3.one * 0.14f, m.flesh);
+                    Prim(PrimitiveType.Sphere, "Ear", head, new Vector3(side * 0.27f, 0.14f, -0.02f), new Vector3(0.05f, 0.4f, 0.27f), m.flesh, new Vector3(0f, 0f, side * -18f));
+                    Prim(PrimitiveType.Sphere, "Ear Canal", head, new Vector3(side * 0.245f, 0.13f, 0f), new Vector3(0.03f, 0.27f, 0.17f), m.wound, new Vector3(0f, 0f, side * -18f));
+                }
+                else
+                {
+                    Prim(PrimitiveType.Sphere, "Eye Socket", head, new Vector3(side * 0.12f, 0.17f, 0.33f), Vector3.one * 0.15f, m.socket);
+                    Prim(PrimitiveType.Sphere, "Eye", head, new Vector3(side * 0.12f, 0.17f, 0.385f), Vector3.one * 0.075f, m.eye);
+                }
                 Cone(head, "Horn", m.bone, new Vector3(side * 0.16f, 0.33f, 0.02f), new Vector3(side * 0.45f, 0.65f, -0.65f), 0.75f, 0.11f, cone);
             }
             var eyePoint = Pivot(head, "Eye Point", new Vector3(0f, 0.17f, 0.4f));
@@ -189,15 +201,18 @@ namespace GrillaPurgatory.Setup
             Drip(jaw, new Vector3(0.1f, -0.1f, 0.3f), 0.15f, m.blood);
             Splat(head, new Vector3(0f, -0.1f, 0.54f), new Vector3(0f, -1f, 0.2f), 0.2f, 0.3f, m.blood);
 
-            // a faint red glow from the eyes
-            var glow = new GameObject("Eye Glow").AddComponent<Light>();
-            glow.transform.SetParent(head, false);
-            glow.transform.localPosition = new Vector3(0f, 0.15f, 0.6f);
-            glow.type = LightType.Point;
-            glow.color = new Color(1f, 0.15f, 0.05f);
-            glow.intensity = 1.5f;
-            glow.range = 5f;
-            glow.shadows = LightShadows.None;
+            if (!blind)
+            {
+                // a faint red glow from the eyes
+                var glow = new GameObject("Eye Glow").AddComponent<Light>();
+                glow.transform.SetParent(head, false);
+                glow.transform.localPosition = new Vector3(0f, 0.15f, 0.6f);
+                glow.type = LightType.Point;
+                glow.color = new Color(1f, 0.15f, 0.05f);
+                glow.intensity = 1.5f;
+                glow.range = 5f;
+                glow.shadows = LightShadows.None;
+            }
 
             // ---- blood spattered across the body
             Splat(torso, new Vector3(-0.18f, 1.12f, 0.285f), Vector3.forward, 0.22f, 0.3f, m.blood);
@@ -226,12 +241,30 @@ namespace GrillaPurgatory.Setup
             var ai = root.AddComponent<MonsterAI>();
             ai.eyes = eyePoint;
             ai.monsterAnimator = anim;
+            if (blind)
+            {
+                // Eyeless and very fast: it can't see you, but it hears everything. Walk slowly to stay hidden.
+                ai.blind = true;
+                ai.wanderSpeed = 2.5f;
+                ai.suspiciousSpeed = 8f;
+                ai.searchSpeed = 4.5f;
+                ai.chaseSpeed = 11f;           // faster than any launch: you can't outrun it, only stay quiet or get out of reach
+                ai.hearRadius = 45f;
+                ai.loseSightSeconds = 6f;      // how long it keeps hunting after the last noise
+                ai.searchSeconds = 6f;
+                ai.catchDistance = 1.9f;
+                ai.wanderRadius = 80f;
+                ai.respawnMinDistance = 55f;
+                ai.respawnMaxDistance = 85f;
+                agent.acceleration = 32f;
+                agent.angularSpeed = 720f;
+            }
             root.AddComponent<HeartbeatProximity>();
             var cutscene = root.AddComponent<DeathCutscene>();
             cutscene.overlayMaterial = MakeOverlayMaterial();
             ai.cutscene = cutscene;
 
-            var saved = PrefabUtility.SaveAsPrefabAsset(root, PrefabPath);
+            var saved = PrefabUtility.SaveAsPrefabAsset(root, blind ? BlindPrefabPath : PrefabPath);
             Object.DestroyImmediate(root);
             return saved;
         }

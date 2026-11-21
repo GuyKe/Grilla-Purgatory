@@ -188,7 +188,7 @@ namespace GrillaPurgatory.Setup
             return d;
         }
 
-        static Material GetTerrainMaterial()
+        internal static Material GetTerrainMaterial()
         {
             const string path = Folder + "/Terrain_URP.mat";
             var mat = AssetDatabase.LoadAssetAtPath<Material>(path);
@@ -205,7 +205,7 @@ namespace GrillaPurgatory.Setup
             return mat;
         }
 
-        static TerrainLayer MakeLayer(string name, Texture2D albedo, Texture2D normal, float tileMeters, float smoothness)
+        internal static TerrainLayer MakeLayer(string name, Texture2D albedo, Texture2D normal, float tileMeters, float smoothness)
         {
             string path = Folder + "/" + name + ".terrainlayer";
             var layer = AssetDatabase.LoadAssetAtPath<TerrainLayer>(path);
@@ -228,7 +228,7 @@ namespace GrillaPurgatory.Setup
 
         const int TexSize = 512;
 
-        static void MakeGrassTextures(out Texture2D albedo, out Texture2D normal)
+        internal static void MakeGrassTextures(out Texture2D albedo, out Texture2D normal)
         {
             var dark = new Color(0.10f, 0.25f, 0.07f);
             var mid = new Color(0.20f, 0.42f, 0.12f);
@@ -259,7 +259,7 @@ namespace GrillaPurgatory.Setup
             normal = SaveTexture("Grass_Normal", NormalFromHeight(hgt, TexSize, 3f), TexSize, true);
         }
 
-        static void MakeDirtTextures(out Texture2D albedo, out Texture2D normal)
+        internal static void MakeDirtTextures(out Texture2D albedo, out Texture2D normal)
         {
             var low = new Color(0.25f, 0.18f, 0.11f);
             var high = new Color(0.42f, 0.32f, 0.20f);
@@ -287,7 +287,7 @@ namespace GrillaPurgatory.Setup
             normal = SaveTexture("Dirt_Normal", NormalFromHeight(hgt, TexSize, 4f), TexSize, true);
         }
 
-        static void MakeRockTextures(out Texture2D albedo, out Texture2D normal)
+        internal static void MakeRockTextures(out Texture2D albedo, out Texture2D normal)
         {
             var low = new Color(0.20f, 0.20f, 0.22f);
             var high = new Color(0.52f, 0.51f, 0.49f);
@@ -314,7 +314,7 @@ namespace GrillaPurgatory.Setup
         }
 
         /// <summary>A tuft of grass blades with a transparent background, for the terrain grass detail.</summary>
-        static Texture2D MakeBladeTexture()
+        internal static Texture2D MakeBladeTexture()
         {
             const int N = 128;
             var col = new Color[N * N];
