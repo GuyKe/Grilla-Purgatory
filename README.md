@@ -205,7 +205,9 @@ has an end. Fog hides the distance.
   faster than any launch. It keeps hunting while you keep making noise, then searches the last spot for a few seconds
   and gives up.
 - **Walk slowly to stay hidden.** Stay quiet, get out of reach (it can't jump: use the trees), or run for the dome.
-- Starts 60-85 m away and respawns 55-85 m away after you die.
+- It starts just outside the dome (20-30 m from its centre) and prowls the ground around it. After you die it
+  reappears 20-32 m from where you wake up. It can't enter the dome, so inside you are safe. Change `respawnMinDistance` /
+  `respawnMaxDistance` and `wanderRadius` on its `MonsterAI`; re-run menu **8** to apply them to the scene.
 - Tuning is on the monster's `MonsterAI` component (speeds, hearing radius, `alertLoudness`, body-noise speeds), and
   `Player` has `quietHandSpeed` / `loudHandSpeed` for how hand speed maps to loudness.
 

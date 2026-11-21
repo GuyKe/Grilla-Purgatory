@@ -71,7 +71,7 @@ namespace GrillaPurgatory.Setup
             for (int i = 0; i < 50; i++)
             {
                 float angle = Random.value * Mathf.PI * 2f;
-                float radius = blind ? Random.Range(60f, 85f) : Random.Range(24f, 36f);   // far enough to start safe
+                float radius = blind ? Random.Range(20f, 30f) : Random.Range(24f, 36f);   // the dome monster starts just outside the dome
                 var p = new Vector3(Mathf.Cos(angle) * radius, 0f, Mathf.Sin(angle) * radius);
                 if (NavMesh.SamplePosition(p, out var hit, 10f, NavMesh.AllAreas) &&
                     new Vector2(hit.position.x, hit.position.z).magnitude > 14f)
@@ -253,9 +253,9 @@ namespace GrillaPurgatory.Setup
                 ai.loseSightSeconds = 6f;      // how long it keeps hunting after the last noise
                 ai.searchSeconds = 6f;
                 ai.catchDistance = 1.9f;
-                ai.wanderRadius = 80f;
-                ai.respawnMinDistance = 55f;
-                ai.respawnMaxDistance = 85f;
+                ai.wanderRadius = 40f;         // it prowls the area around the dome instead of wandering off across the field
+                ai.respawnMinDistance = 20f;   // and comes back close to where you wake up (just outside the dome)
+                ai.respawnMaxDistance = 32f;
                 agent.acceleration = 32f;
                 agent.angularSpeed = 720f;
             }
