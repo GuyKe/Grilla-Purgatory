@@ -246,3 +246,10 @@ curves were widened: a hand touch is silent below 0.8 m/s and a full slap at 4 m
 `loudHandSpeed`); your body is silent below 2 m/s and loud by 7 m/s (`MonsterAI.quietBodySpeed` / `loudBodySpeed`).
 **Tiptoe** (slow hand placements, slow body movement) and it won't notice you at all. A loud swing needs 0.6 loudness to
 make it charge; between 0.3 and 0.6 it only goes to look.
+
+**Bots going in and out.** Bots use the dome's door: the braver ones walk out into the field (tiptoeing when the monster
+could be about, running when it is far), wander for 35-80 s, then come back in. They leave the dome unless the monster is
+within 28 m or hunting. When it gets within ~18-34 m of a bot that is outside, or is hunting within 55 m, the bot panics
+and **runs for the dome** at 6.3 m/s, then waits 10-25 s before venturing out again. The two most nervous bots never
+leave. (A bug had kept every bot inside: they only went out if the monster was over 45 m away, but it now prowls the area
+around the dome.) If a bot isn't on the NavMesh the Console says so.

@@ -94,7 +94,11 @@ namespace GrillaPurgatory.Game
         {
             if (!agent.isOnNavMesh && NavMesh.SamplePosition(transform.position, out var hit, 6f, NavMesh.AllAreas))
                 agent.Warp(hit.position);
-            nextOuting = Time.time + Random.Range(8f, 30f) / Mathf.Lerp(0.5f, 1.5f, bravery);
+            if (!agent.isOnNavMesh)
+                Debug.LogWarning("[Bot] " + PlayerName + " is not on a NavMesh. Rebuild the map (Grilla Purgatory > 8, or > 4 to rebake).");
+
+            // The boldest one heads out almost at once, so you can see them use the door
+            nextOuting = Time.time + (bravery > 0.9f ? Random.Range(2f, 5f) : Random.Range(4f, 16f) / Mathf.Lerp(0.5f, 1.5f, bravery));
             nextChat = Time.time + Random.Range(3f, 12f);
             nextGesture = Time.time + Random.Range(6f, 18f);
             EnterLounge();
@@ -112,13 +116,13 @@ namespace GrillaPurgatory.Game
             bool safe = SafeZone.IsInside(Position);
 
             // Panic: braver bots hold their nerve a little longer
-            float panicDistance = Mathf.Lerp(26f, 12f, bravery);
-            if (!safe && mode != Mode.Flee && (monsterDistance < panicDistance || (monsterHunting && monsterDistance < 40f)))
+            float panicDistance = Mathf.Lerp(34f, 18f, bravery);
+            if (!safe && mode != Mode.Flee && (monsterDistance < panicDistance || (monsterHunting && monsterDistance < 55f)))
                 EnterFlee();
 
             switch (mode)
             {
-                case Mode.Lounge: UpdateLounge(monsterDistance); break;
+                case Mode.Lounge: UpdateLounge(monsterDistance, monsterHunting); break;
                 case Mode.Explore: UpdateExplore(monsterDistance, safe); break;
                 case Mode.Flee: UpdateFlee(monsterDistance, monsterHunting, safe); break;
             }
@@ -139,13 +143,14 @@ namespace GrillaPurgatory.Game
             nextDecision = 0f;
         }
 
-        void UpdateLounge(float monsterDistance)
+        void UpdateLounge(float monsterDistance, bool monsterHunting)
         {
             if (Time.time < nextDecision) return;
             nextDecision = Time.time + Random.Range(3f, 9f);
 
-            // Braver players sometimes head out, but not while the monster is lurking close by
-            if (bravery > 0.3f && Time.time >= nextOuting && monsterDistance > 45f)
+            // Braver players head out through the door now and then, but not while the monster is right outside or hunting.
+            // (It prowls close to the dome, so the old "stay in unless it is 45 m away" rule kept everyone inside forever.)
+            if (bravery > 0.3f && Time.time >= nextOuting && monsterDistance > 28f && !monsterHunting)
             {
                 EnterExplore();
                 return;
@@ -179,7 +184,7 @@ namespace GrillaPurgatory.Game
             for (int i = 0; i < 12; i++)
             {
                 float angle = Random.value * Mathf.PI * 2f;
-                float radius = Random.Range(25f, 90f);
+                float radius = Random.Range(20f, 60f);
                 var p = new Vector3(Mathf.Cos(angle) * radius, 0f, Mathf.Sin(angle) * radius);
                 if (NavMesh.SamplePosition(p, out var hit, 15f, NavMesh.AllAreas))
                 {
@@ -192,7 +197,7 @@ namespace GrillaPurgatory.Game
         void UpdateExplore(float monsterDistance, bool safe)
         {
             // Quiet when the monster could be listening, running when it seems far away
-            bool sneak = monsterDistance < 65f;
+            bool sneak = monsterDistance < 90f;
             agent.speed = (sneak ? 1.3f : 4.4f) * speedJitter;
 
             if (Time.time > modeUntil)
@@ -227,6 +232,7 @@ namespace GrillaPurgatory.Game
             mode = Mode.Flee;
             goingHome = false;
             nextPathTime = 0f;
+            nextOuting = Mathf.Max(nextOuting, Time.time + Random.Range(10f, 25f));
             Say(FleeChat[Random.Range(0, FleeChat.Length)], 3f);
         }
 
