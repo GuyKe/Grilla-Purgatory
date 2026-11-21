@@ -288,6 +288,13 @@ namespace GrillaPurgatory.Setup
             player.defaultSlideFactor = 0.03f;
             player.defaultPrecision = 0.995f;
             player.locomotionEnabledLayers = ~(1 << playerLayer); // everything except the player itself
+
+            // Visible arms from the shoulders to the hand followers
+            var arms = rigGo.AddComponent<GorillaLocomotion.GorillaArms>();
+            arms.head = camGo.transform;
+            arms.leftHand = leftFollower;
+            arms.rightHand = rightFollower;
+            arms.material = GetOrCreateMaterial("Arm_Placeholder", new Color(0.18f, 0.14f, 0.12f));
         }
 
         static Transform CreateTrackedHand(Transform parent, string name, XRNode node, int layer)
