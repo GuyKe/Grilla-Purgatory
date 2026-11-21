@@ -16,13 +16,14 @@ namespace GrillaPurgatory.Monster
 
         [HideInInspector] public bool chasing;
         [HideInInspector] public bool attacking;
+        [HideInInspector] public float lunge;   // 0..1: dives forward at the player's face
 
         enum J { Hips, Torso, Neck, Head, Jaw, ArmL, ArmR, ElbowL, ElbowR, LegL, LegR, KneeL, KneeR }
 
         Transform[] joints;
         Quaternion[] rest;
         Vector3 hipsRestPos;
-        float phase, attack, jawOpen;
+        float phase, attack, lungeSmooth, jawOpen;
         float lastSign = 1f;
         AudioSource stepSource, growlSource;
 
@@ -67,6 +68,7 @@ namespace GrillaPurgatory.Monster
             phase += dt * (1.6f + speed * 1.7f);
             float s = Mathf.Sin(phase), c = Mathf.Cos(phase);
             attack = Mathf.MoveTowards(attack, attacking ? 1f : 0f, dt * 4f);
+            lungeSmooth = Mathf.MoveTowards(lungeSmooth, lunge, dt * 5f);
 
             // Legs: swing, with the knee lifting the foot on the forward swing
             Pose(J.LegL, 35f * s * walk);
@@ -75,8 +77,8 @@ namespace GrillaPurgatory.Monster
             Pose(J.KneeR, 4f + Mathf.Max(0f, s) * 45f * walk);
 
             // Arms swing against the legs; raised and clawing when attacking
-            Pose(J.ArmL, Mathf.Lerp(-30f * s * walk, -150f, attack), 0f, Mathf.Lerp(0f, -25f, attack));
-            Pose(J.ArmR, Mathf.Lerp(30f * s * walk, -150f, attack), 0f, Mathf.Lerp(0f, 25f, attack));
+            Pose(J.ArmL, Mathf.Lerp(-30f * s * walk, Mathf.Lerp(-150f, -85f, lungeSmooth), attack), 0f, Mathf.Lerp(0f, -25f, attack));
+            Pose(J.ArmR, Mathf.Lerp(30f * s * walk, Mathf.Lerp(-150f, -85f, lungeSmooth), attack), 0f, Mathf.Lerp(0f, 25f, attack));
             Pose(J.ElbowL, Mathf.Lerp(8f + Mathf.Max(0f, s) * 25f * walk, 25f, attack));
             Pose(J.ElbowR, Mathf.Lerp(8f + Mathf.Max(0f, -s) * 25f * walk, 25f, attack));
 
@@ -84,12 +86,12 @@ namespace GrillaPurgatory.Monster
             hips.localPosition = hipsRestPos + Vector3.up * (Mathf.Abs(c) * 0.07f * run);
             Pose(J.Hips, 0f, 0f, Mathf.Sin(phase) * 3f * walk);
             float breathe = Mathf.Sin(Time.time * 1.6f) * 1.5f;
-            Pose(J.Torso, (8f + 12f * run) * walk + breathe - 10f * attack, Mathf.Sin(phase) * -4f * walk);
+            Pose(J.Torso, (8f + 12f * run) * walk + breathe - 10f * attack + 55f * lungeSmooth, Mathf.Sin(phase) * -4f * walk);
 
             // Head: restless twitching, thrust forward when hunting
             float tx = (Mathf.PerlinNoise(Time.time * 1.3f, 0f) - 0.5f) * 14f;
             float ty = (Mathf.PerlinNoise(0f, Time.time * 1.1f) - 0.5f) * 30f;
-            Pose(J.Neck, (chasing ? 14f : 0f) + tx * 0.5f, ty * 0.5f);
+            Pose(J.Neck, (chasing ? 14f : 0f) + tx * 0.5f + 15f * lungeSmooth, ty * 0.5f);
             Pose(J.Head, tx * 0.5f - (chasing ? 8f : 0f), ty * 0.5f, (Mathf.PerlinNoise(3f, Time.time * 2f) - 0.5f) * 10f);
 
             // Jaw

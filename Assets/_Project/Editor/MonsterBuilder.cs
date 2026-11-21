@@ -226,7 +226,9 @@ namespace GrillaPurgatory.Setup
             var ai = root.AddComponent<MonsterAI>();
             ai.eyes = eyePoint;
             ai.monsterAnimator = anim;
-            ai.blackoutMaterial = MakeBlackoutMaterial();
+            var cutscene = root.AddComponent<DeathCutscene>();
+            cutscene.overlayMaterial = MakeOverlayMaterial();
+            ai.cutscene = cutscene;
 
             var saved = PrefabUtility.SaveAsPrefabAsset(root, PrefabPath);
             Object.DestroyImmediate(root);
@@ -369,16 +371,29 @@ namespace GrillaPurgatory.Setup
             return mat;
         }
 
-        static Material MakeBlackoutMaterial()
+        /// <summary>A transparent unlit material (URP) for the cutscene's red flash and fades.</summary>
+        static Material MakeOverlayMaterial()
         {
-            string path = Folder + "/Monster_Blackout.mat";
+            string path = Folder + "/Monster_Overlay.mat";
             var mat = AssetDatabase.LoadAssetAtPath<Material>(path);
             if (mat == null)
             {
                 mat = new Material(Shader.Find("Universal Render Pipeline/Unlit"));
                 AssetDatabase.CreateAsset(mat, path);
             }
-            mat.SetColor("_BaseColor", Color.black);
+            // The same settings URP's material inspector applies for Surface Type = Transparent, Blend = Alpha
+            mat.SetFloat("_Surface", 1f);
+            mat.SetFloat("_Blend", 0f);
+            mat.SetFloat("_SrcBlend", (float)UnityEngine.Rendering.BlendMode.SrcAlpha);
+            mat.SetFloat("_DstBlend", (float)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+            mat.SetFloat("_SrcBlendAlpha", (float)UnityEngine.Rendering.BlendMode.One);
+            mat.SetFloat("_DstBlendAlpha", (float)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+            mat.SetFloat("_ZWrite", 0f);
+            mat.SetOverrideTag("RenderType", "Transparent");
+            mat.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
+            mat.SetShaderPassEnabled("ShadowCaster", false);
+            mat.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Transparent;
+            mat.SetColor("_BaseColor", new Color(0f, 0f, 0f, 0f));
             EditorUtility.SetDirty(mat);
             return mat;
         }

@@ -45,7 +45,7 @@ namespace GrillaPurgatory.Monster
         [Header("References (set by the builder)")]
         public Transform eyes;
         public MonsterAnimator monsterAnimator;
-        public Material blackoutMaterial;
+        public DeathCutscene cutscene;
 
         NavMeshAgent agent;
         Transform playerHead;
@@ -237,29 +237,25 @@ namespace GrillaPurgatory.Monster
             var player = Player.Instance;
             if (player != null) player.enabled = false; // freeze their locomotion
 
+            float survived = Time.time - runStartTime;
             Vector3 flat = Vector3.ProjectOnPlane(playerHead.position - transform.position, Vector3.up);
             if (flat.sqrMagnitude > 0.001f) transform.rotation = Quaternion.LookRotation(flat);
             if (monsterAnimator != null) { monsterAnimator.chasing = false; monsterAnimator.attacking = true; }
 
-            Debug.Log($"[Monster] Caught you after {Time.time - runStartTime:F1} s.");
-            yield return new WaitForSeconds(0.9f);
+            Debug.Log($"[Monster] Caught you after {survived:F1} s.");
 
-            GameObject cover = null;
-            if (blackoutMaterial != null)
+            if (cutscene != null && player != null)
             {
-                cover = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-                Destroy(cover.GetComponent<Collider>());
-                cover.transform.SetParent(playerHead, false);
-                cover.transform.localScale = new Vector3(-1.5f, 1.5f, 1.5f); // inside-out so the camera sees it
-                cover.GetComponent<Renderer>().sharedMaterial = blackoutMaterial;
+                agent.enabled = false; // the cutscene moves the monster directly
+                yield return StartCoroutine(cutscene.Play(this, player, playerHead, survived, () => Respawn(player)));
             }
-            yield return new WaitForSeconds(1.2f);
+            else
+            {
+                yield return new WaitForSeconds(2f);
+                Respawn(player);
+            }
 
-            Respawn(player);
-            yield return new WaitForSeconds(0.8f);
-
-            if (cover != null) Destroy(cover);
-            if (monsterAnimator != null) monsterAnimator.attacking = false;
+            if (monsterAnimator != null) { monsterAnimator.attacking = false; monsterAnimator.lunge = 0f; }
             agent.isStopped = false;
             runStartTime = Time.time;
             EnterState(State.Wander);
@@ -276,6 +272,8 @@ namespace GrillaPurgatory.Monster
                 player.enabled = true;
             }
 
+            if (!agent.enabled) agent.enabled = true;
+
             // Put the monster well away from the spawn point
             for (int i = 0; i < 30; i++)
             {
@@ -284,9 +282,10 @@ namespace GrillaPurgatory.Monster
                 if (NavMesh.SamplePosition(candidate, out var hit, 30f, NavMesh.AllAreas))
                 {
                     agent.Warp(hit.position);
-                    break;
+                    return;
                 }
             }
+            if (NavMesh.SamplePosition(transform.position, out var near, 30f, NavMesh.AllAreas)) agent.Warp(near.position);
         }
     }
 }

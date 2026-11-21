@@ -113,3 +113,23 @@ Trees and walls block its view. Staying quiet matters: every hand strike makes n
 Chase speed is deliberately a little below a good launch (~6.5 m/s) so skilled movement escapes it.
 All tuning is on the `MonsterAI` component. Movement and sound (footfalls, growl) are procedural: no animation
 clips or audio files. Generated assets are in `Assets/_Project/Art/Monster/` and `Prefabs/Monster.prefab`.
+
+## Death cutscene
+When the monster reaches you (`DeathCutscene`, about 8 s):
+1. **Dread.** Time slows, you are turned to face it, a heartbeat quickens and the screen reddens and shakes.
+2. **The lunge.** It dives at your face, jaws wide, and bites. Hard cut to black with a bite sound.
+3. **Black screen.** "YOU WERE DEVOURED", how long you survived, and your best time (saved).
+4. **You wake** back at the start and the world fades in. The monster has been moved far away.
+
+Timings are on the `DeathCutscene` component of the monster. Sound is synthesised, so there are no audio files.
+Rebuild the monster (**Grilla Purgatory → 4. Add Monster and Bake NavMesh**) to pick this up in an existing scene.
+
+## Graphics computer
+A desk with a monitor stands just left of the start point (menu **5. Add Graphics Computer**, or menu 2 for a fresh
+scene). **Reach out and touch the screen with a hand** to press a button. You can change:
+- **Quality** presets: LOW, MEDIUM, HIGH, ULTRA
+- **Resolution** (render scale 70-120%), **anti-aliasing** (off, 2x, 4x), **grass** (off to high),
+  **view distance** (40-120 m, which also moves the fog) and **texture** quality
+
+Settings apply immediately, are saved between launches, and are applied again at startup. The defaults suit a Quest;
+raise them on PC VR. Logic is in `GraphicsSettingsService`, the menu in `ComputerScreen`.

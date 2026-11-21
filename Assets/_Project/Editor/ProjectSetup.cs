@@ -211,7 +211,8 @@ namespace GrillaPurgatory.Setup
 
             CreateRig();
 
-            MonsterBuilder.AddToScene(); // bakes the NavMesh too, so it must come after the terrain, trees and rig
+            ComputerBuilder.AddToScene();
+            MonsterBuilder.AddToScene(); // bakes the NavMesh too, so it must come after the terrain, trees, rig and desk
 
             EditorSceneManager.SaveScene(scene, ScenePath);
             var scenes = EditorBuildSettings.scenes.Where(s => s.path != ScenePath).ToList();
