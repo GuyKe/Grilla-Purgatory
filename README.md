@@ -211,3 +211,12 @@ has an end. Fog hides the distance.
 
 **Heads-up for the first map.** Hand strikes are now loudness-based everywhere, so the original monster also hears slow
 hand placements less far than before.
+
+## Building the APK from the command line
+`BuildScript.BuildQuestApk` regenerates the scene and builds it. It builds the **dome map by default**; add `-map field`
+for the original field. (It used to be hardwired to `Field.unity`, so a headless build always came out as the old map.)
+```
+Unity -batchmode -quit -projectPath . -executeMethod GrillaPurgatory.Setup.BuildScript.BuildQuestApk -buildOutput Builds/GrillaPurgatory.apk [-map field]
+```
+In the editor, pressing Play runs whichever scene is open: after menu **8** that is `Dome.unity`. To switch back, open
+`Assets/_Project/Scenes/Field.unity`.
