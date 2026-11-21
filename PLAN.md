@@ -65,7 +65,7 @@ Assets/_Project/
 
 ## 7. Milestones
 - [x] **1. Setup** — Unity 6 URP project, OpenXR, Android/Quest build settings, hello-world VR scene. *(scaffolded; verify in headset)*
-- [ ] **2. Locomotion** — hand colliders, body push, throw velocity, haptics; tune on flat plane + blocks.
+- [x] **2. Locomotion** — uses Another-Axiom/GorillaLocomotion (MIT) + body fitter so you stand on the ground. *(scaffolded; tune in headset; haptics/sound still to add)*
 - [ ] **3. Field** — terrain, grass, fog, boundary, baked lighting; hold 72/90 fps on Quest.
 - [ ] **4. Monster v1** — NavMesh, wander + chase, catch, respawn.
 - [ ] **5. Monster v2** — line of sight, noise hearing, search, audio, animation.

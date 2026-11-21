@@ -98,7 +98,7 @@ namespace GrillaPurgatory.Setup
             PlayerSettings.SetGraphicsAPIs(BuildTarget.Android, new[] { GraphicsDeviceType.Vulkan });
 
             // Physics: the arm locomotion runs in FixedUpdate, so match the headset refresh rate (90 Hz).
-            Time.fixedDeltaTime = 1f / 90f;
+            SetFixedTimestep(1f / 90f);
         }
 
         static void ConfigureUrp()
@@ -226,13 +226,23 @@ namespace GrillaPurgatory.Setup
 
         static void CreateRig()
         {
-            var rigGo = new GameObject("XR Origin (Player)");
-            var origin = rigGo.AddComponent<XROrigin>();
+            int playerLayer = EnsureLayer("Player");
 
-            var offset = new GameObject("Camera Offset");
+            // Root = the physics body. Its Y position is the floor (Floor tracking origin).
+            var rigGo = new GameObject("XR Origin (Player)") { layer = playerLayer };
+            rigGo.transform.position = Vector3.zero; // standing on the ground
+            var origin = rigGo.AddComponent<XROrigin>();
+            var rb = rigGo.AddComponent<Rigidbody>();
+            rb.mass = 1f;
+            rb.useGravity = true;
+            rb.freezeRotation = true;
+            rb.interpolation = RigidbodyInterpolation.None;
+            rb.collisionDetectionMode = CollisionDetectionMode.Continuous;
+
+            var offset = new GameObject("Camera Offset") { layer = playerLayer };
             offset.transform.SetParent(rigGo.transform, false);
 
-            var camGo = new GameObject("Main Camera") { tag = "MainCamera" };
+            var camGo = new GameObject("Main Camera") { tag = "MainCamera", layer = playerLayer };
             camGo.transform.SetParent(offset.transform, false);
             var cam = camGo.AddComponent<Camera>();
             cam.nearClipPlane = 0.01f;
@@ -244,25 +254,114 @@ namespace GrillaPurgatory.Setup
             origin.CameraFloorOffsetObject = offset;
             origin.RequestedTrackingOriginMode = XROrigin.TrackingOriginMode.Floor;
 
-            CreateHand(offset.transform, "Left Hand", "LeftHand");
-            CreateHand(offset.transform, "Right Hand", "RightHand");
+            var head = camGo.AddComponent<SphereCollider>();
+            head.radius = 0.1f;
+
+            var frictionless = GetOrCreateFrictionlessMaterial();
+
+            var bodyGo = new GameObject("Body Collider") { layer = playerLayer };
+            bodyGo.transform.SetParent(camGo.transform, false);
+            var body = bodyGo.AddComponent<CapsuleCollider>();
+            body.radius = 0.12f;
+            body.sharedMaterial = frictionless;
+            head.sharedMaterial = frictionless;
+            var fitter = bodyGo.AddComponent<BodyColliderFitter>();
+            fitter.floorReference = rigGo.transform;
+
+            // Tracked controllers (invisible) + followers (what you see; clamped by surfaces)
+            var leftTracked = CreateTrackedHand(offset.transform, "Left Hand Tracked", "LeftHand", playerLayer);
+            var rightTracked = CreateTrackedHand(offset.transform, "Right Hand Tracked", "RightHand", playerLayer);
+            var leftFollower = CreateHandFollower(rigGo.transform, "Left Hand Follower", playerLayer);
+            var rightFollower = CreateHandFollower(rigGo.transform, "Right Hand Follower", playerLayer);
+
+            // Gorilla locomotion (Another-Axiom/GorillaLocomotion, MIT)
+            var player = rigGo.AddComponent<GorillaLocomotion.Player>();
+            player.headCollider = head;
+            player.bodyCollider = body;
+            player.leftHandTransform = leftTracked;
+            player.rightHandTransform = rightTracked;
+            player.leftHandFollower = leftFollower;
+            player.rightHandFollower = rightFollower;
+            player.velocityHistorySize = 6;
+            player.maxArmLength = 1.5f;
+            player.unStickDistance = 1f;
+            player.velocityLimit = 0.4f;
+            player.maxJumpSpeed = 6.5f;
+            player.jumpMultiplier = 1.1f;
+            player.minimumRaycastDistance = 0.05f;
+            player.defaultSlideFactor = 0.03f;
+            player.defaultPrecision = 0.995f;
+            player.locomotionEnabledLayers = ~(1 << playerLayer); // everything except the player itself
         }
 
-        static void CreateHand(Transform parent, string name, string usage)
+        static Transform CreateTrackedHand(Transform parent, string name, string usage, int layer)
         {
-            var hand = new GameObject(name);
+            var hand = new GameObject(name) { layer = layer };
             hand.transform.SetParent(parent, false);
             string device = "<XRController>{" + usage + "}";
             AddPoseDriver(hand, device + "/devicePosition", device + "/deviceRotation", device + "/trackingState");
+            return hand.transform;
+        }
 
-            // Visual only for now; the locomotion system (milestone 2) adds its own hand colliders.
-            var visual = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-            visual.name = "Hand Visual";
-            Object.DestroyImmediate(visual.GetComponent<Collider>());
-            visual.transform.SetParent(hand.transform, false);
-            visual.transform.localScale = Vector3.one * 0.12f;
-            visual.GetComponent<Renderer>().sharedMaterial =
+        static Transform CreateHandFollower(Transform parent, string name, int layer)
+        {
+            var follower = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            follower.name = name;
+            follower.layer = layer;
+            Object.DestroyImmediate(follower.GetComponent<Collider>()); // visual only; Player does the casting
+            follower.transform.SetParent(parent, false);
+            follower.transform.localScale = Vector3.one * 0.12f;
+            follower.GetComponent<Renderer>().sharedMaterial =
                 GetOrCreateMaterial("Hand_Placeholder", new Color(0.25f, 0.2f, 0.17f));
+            return follower.transform;
+        }
+
+        static PhysicsMaterial GetOrCreateFrictionlessMaterial()
+        {
+            const string path = Root + "/Settings/Frictionless.physicMaterial";
+            var mat = AssetDatabase.LoadAssetAtPath<PhysicsMaterial>(path);
+            if (mat != null) return mat;
+            EnsureFolder(SettingsFolder);
+            mat = new PhysicsMaterial("Frictionless")
+            {
+                dynamicFriction = 0f,
+                staticFriction = 0f,
+                bounciness = 0f,
+                frictionCombine = PhysicsMaterialCombine.Minimum,
+                bounceCombine = PhysicsMaterialCombine.Minimum,
+            };
+            AssetDatabase.CreateAsset(mat, path);
+            return mat;
+        }
+
+        /// <summary>Returns the index of the named layer, creating it in the first free user slot if needed.</summary>
+        static int EnsureLayer(string layerName)
+        {
+            int existing = LayerMask.NameToLayer(layerName);
+            if (existing >= 0) return existing;
+
+            var tagManager = new SerializedObject(AssetDatabase.LoadAllAssetsAtPath("ProjectSettings/TagManager.asset")[0]);
+            var layers = tagManager.FindProperty("layers");
+            for (int i = 8; i < layers.arraySize; i++)
+            {
+                var slot = layers.GetArrayElementAtIndex(i);
+                if (string.IsNullOrEmpty(slot.stringValue))
+                {
+                    slot.stringValue = layerName;
+                    tagManager.ApplyModifiedPropertiesWithoutUndo();
+                    return i;
+                }
+            }
+            throw new System.InvalidOperationException("No free layer slot for '" + layerName + "'.");
+        }
+
+        static void SetFixedTimestep(float seconds)
+        {
+            var timeManager = new SerializedObject(AssetDatabase.LoadAllAssetsAtPath("ProjectSettings/TimeManager.asset")[0]);
+            var prop = timeManager.FindProperty("Fixed Timestep");
+            if (prop == null) return;
+            prop.floatValue = seconds;
+            timeManager.ApplyModifiedPropertiesWithoutUndo();
         }
 
         static void AddPoseDriver(GameObject go, string position, string rotation, string trackingState)
