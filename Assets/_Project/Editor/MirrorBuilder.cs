@@ -16,14 +16,14 @@ namespace GrillaPurgatory.Setup
         }
 
         /// <summary>Builds the mirror at 'position', turned to face 'faceToward' (usually the spawn point).</summary>
-        public static void AddToScene(Vector3 position, Vector3 faceToward)
+        public static void AddToScene(Vector3 position, Vector3 faceToward, Material frameMaterial = null)
         {
             var old = GameObject.Find("Mirror");
             if (old != null) Object.DestroyImmediate(old);
 
             int mirrorLayer = ProjectSetup.EnsureLayer("MirrorSurface");
 
-            var wood = ProjectSetup.GetOrCreateMaterial("Desk_Placeholder", new Color(0.25f, 0.18f, 0.12f));
+            var wood = frameMaterial != null ? frameMaterial : ProjectSetup.GetOrCreateMaterial("Desk_Placeholder", new Color(0.25f, 0.18f, 0.12f));
             var glassMat = GetGlassMaterial();
 
             var root = new GameObject("Mirror").transform;

@@ -9,10 +9,10 @@ using UnityEngine.UI;
 namespace GrillaPurgatory.Game
 {
     /// <summary>
-    /// A computer-controlled player that behaves like a real one: an ape with a name tag who hangs about in the dome,
+    /// A computer-controlled player that behaves like a real one: an ape with a name tag who hangs about in the safe zone,
     /// chats, beats their chest, sometimes ventures out into the field (running, or tiptoeing when the monster is near),
-    /// panics and runs for the dome when the monster shows up, and gets eaten if it catches them. Eaten players
-    /// reappear in the dome a little later. Their footfalls are noise the monster can hear, exactly like yours.
+    /// panics and runs for the safe zone when the monster shows up, and gets eaten if it catches them. Eaten players
+    /// reappear in the safe zone a little later. Their footfalls are noise the monster can hear, exactly like yours.
     ///
     /// They are not networked: the whole room runs on this device. See RoomService.
     /// </summary>
@@ -50,7 +50,7 @@ namespace GrillaPurgatory.Game
         float gestureBlend;
         bool goingHome, lingering;
 
-        static readonly string[] LoungeChat = { "anyone seen it?", "stay in the dome", "this thing is scary", "lol", "i'm not going out there",
+        static readonly string[] LoungeChat = { "anyone seen it?", "stay in the safe zone", "this thing is scary", "lol", "i'm not going out there",
             "shhh it's near", "where is everyone", "brb", "has anyone beat it?", "don't make noise" };
         static readonly string[] ExploreChat = { "sneaking...", "shh", "tiptoe tiptoe", "i can do this", "so quiet out here", "wish me luck" };
         static readonly string[] FleeChat = { "RUN!!", "IT'S HERE", "HELP", "nooo", "GO GO GO", "it's coming!!" };
@@ -148,9 +148,8 @@ namespace GrillaPurgatory.Game
             if (Time.time < nextDecision) return;
             nextDecision = Time.time + Random.Range(3f, 9f);
 
-            // Braver players head out through the door now and then, but not while the monster is right outside or hunting.
-            // (It prowls close to the dome, so the old "stay in unless it is 45 m away" rule kept everyone inside forever.)
-            if (bravery > 0.3f && Time.time >= nextOuting && monsterDistance > 28f && !monsterHunting)
+            // Braver players head out now and then, but not while the monster is right outside or hunting.
+                        if (bravery > 0.3f && Time.time >= nextOuting && monsterDistance > 28f && !monsterHunting)
             {
                 EnterExplore();
                 return;
@@ -159,7 +158,7 @@ namespace GrillaPurgatory.Game
             if (Random.value < 0.6f)
             {
                 agent.speed = Random.Range(0.9f, 1.4f) * speedJitter;   // a relaxed shuffle
-                agent.SetDestination(manager != null ? manager.RandomDomePoint() : Position);
+                agent.SetDestination(manager != null ? manager.RandomHomePoint() : Position);
             }
             if (Time.time >= nextGesture)
             {
@@ -205,7 +204,7 @@ namespace GrillaPurgatory.Game
                 if (!goingHome)
                 {
                     goingHome = true;
-                    agent.SetDestination(manager != null ? manager.RandomDomePoint() : Position);
+                    agent.SetDestination(manager != null ? manager.RandomHomePoint() : Position);
                     Say("heading back", 3f);
                 }
                 if (safe) EnterLounge();
@@ -274,7 +273,7 @@ namespace GrillaPurgatory.Game
 
             yield return new WaitForSeconds(Random.Range(9f, 15f));
 
-            if (manager != null) agent.Warp(manager.RandomDomePoint());
+            if (manager != null) agent.Warp(manager.RandomHomePoint());
             SetVisible(true);
             agent.isStopped = false;
             Say("ugh, i got eaten", 4f);

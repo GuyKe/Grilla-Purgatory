@@ -1,7 +1,7 @@
 namespace GrillaPurgatory.Game
 {
     /// <summary>
-    /// The text shown on the update log screen in the dome. Newest first. To add a release, put a new Entry at
+    /// The text shown on an update log screen. Newest first. To add a release, put a new Entry at
     /// the top of the list (keep each note to about one line so it fits on the screen).
     /// </summary>
     public static class UpdateLog
@@ -17,24 +17,23 @@ namespace GrillaPurgatory.Game
         {
             new Entry
             {
-                Version = "v0.10", Title = "Rooms",
+                Version = "v0.11", Title = "The Facility",
                 Notes = new[]
                 {
-                    "New ROOM tab on the computer: type a join code with the keyboard and press JOIN.",
-                    "Code BOTS: a room full of other players who act like real ones. Check the sign for who it's for.",
-                    "Bots chat, wander, tiptoe, panic and run for the dome, and the monster hunts them too.",
-                    "Only big movements make noise now. Tiptoe slowly and the monster won't hear you.",
+                    "New map: a metal facility. Walk through the storeroom, up the stairs and across the dark room to the bright door.",
+                    "It leads to a very dark fog field where the monster hunts by sound.",
+                    "Grass is loud. Metal platforms are silent: stay on them, or jump between them, and it won't hear you.",
                 },
             },
             new Entry
             {
-                Version = "v0.9", Title = "The Dome",
+                Version = "v0.10", Title = "Rooms",
                 Notes = new[]
                 {
-                    "New map: a huge wooden dome that is a safe spot, with a wall-mounted computer and this update log.",
-                    "Outside is a big open field with a few hills and trees far apart.",
-                    "New monster: it has no eyes and hunts by sound only. It is very fast.",
-                    "Move your hands and body slowly to stay hidden. Fast swings and running are loud.",
+                    "New ROOM tab on the computer: type a join code with the keyboard and press JOIN.",
+                    "Code BOTS: a room full of other players who act like real ones (simulated, offline).",
+                    "Bots chat, wander, tiptoe, panic and run for safety, and the monster hunts them too.",
+                    "Only big movements make noise now. Tiptoe slowly and the monster won't hear you.",
                 },
             },
             new Entry

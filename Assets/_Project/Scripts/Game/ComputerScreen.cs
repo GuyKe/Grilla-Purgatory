@@ -148,7 +148,7 @@ namespace GrillaPurgatory.Game
 
         void JoinRoom()
         {
-            // This map needs a bot room in it for BOTS to mean anything (the dome map has one)
+            // This map needs a bot room in it for BOTS to mean anything (see BotBuilder)
             if (typedCode.Trim().ToUpperInvariant() == RoomService.BotsCode && FindFirstObjectByType<BotManager>() == null)
             {
                 message = "This map has no bot room. (Editor: Grilla Purgatory > 9. Add Bot Room.)";

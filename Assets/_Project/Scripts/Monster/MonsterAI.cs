@@ -61,6 +61,8 @@ namespace GrillaPurgatory.Monster
         [Tooltip("After you die, the monster reappears this far from your spawn point (metres).")]
         public float respawnMinDistance = 24f;
         public float respawnMaxDistance = 36f;
+        [Tooltip("If set, it reappears around this point instead of around your spawn point (for maps where the monster lives apart from you).")]
+        public Transform monsterHome;
 
         [Header("References (set by the builder)")]
         public Transform eyes;
@@ -80,14 +82,14 @@ namespace GrillaPurgatory.Monster
         /// <summary>The monster in the scene (there is one), so bots can look out for it.</summary>
         public static MonsterAI Instance { get; private set; }
 
-        /// <summary>Navigation areas it may walk on. It never enters area 2, which is the dome's interior.</summary>
+        /// <summary>Navigation areas it may walk on. It never enters area 2 ("Jump"), which scenes can use for space only you and the bots may enter.</summary>
         int AreaMask { get { return agent.areaMask; } }
 
         void Awake()
         {
             Instance = this;
             agent = GetComponent<NavMeshAgent>();
-            agent.areaMask &= ~(1 << 2);   // the dome's interior is area 2 ("Jump"), kept for the bots and you
+            agent.areaMask &= ~(1 << 2);   // area 2 is kept free of the monster
             // Older scenes built before the heartbeat existed won't have it on the prefab
             if (GetComponent<HeartbeatProximity>() == null) gameObject.AddComponent<HeartbeatProximity>();
             int playerLayer = LayerMask.NameToLayer("Player");
@@ -155,7 +157,8 @@ namespace GrillaPurgatory.Monster
 
         void OnHandStrike(Vector3 position, float loudness)
         {
-            HearNoise(position, loudness, hearRadius);
+            // What you touched matters: metal platforms are silent, grass always crunches (see SurfaceSound)
+            HearNoise(position, SurfaceSound.AdjustStrike(position, loudness), hearRadius);
         }
 
         // Other players (the bots) make noise too
@@ -205,7 +208,14 @@ namespace GrillaPurgatory.Monster
             lastHeadPosition = p;
             if (speed > 40f) return; // a teleport (respawn), not movement
 
+            // Rustling needs something under you to rustle against: jump between platforms and you make no sound at all
+            var surface = SurfaceSound.Under(p, out bool grounded);
+            if (!grounded) return;
+            if (surface != null && surface.kind == SurfaceSound.Kind.Silent) return;
+
             float level = Mathf.InverseLerp(quietBodySpeed, loudBodySpeed, speed);
+            if (surface != null && surface.kind == SurfaceSound.Kind.Loud && speed > 0.3f)
+                level = Mathf.Max(level, surface.loudnessFloor);   // grass crunches under you at any real movement
             if (level > 0.05f) HearNoise(p, level, bodyNoiseRadius);
         }
 
@@ -424,7 +434,7 @@ namespace GrillaPurgatory.Monster
             for (int i = 0; i < 30; i++)
             {
                 Vector2 c = Random.insideUnitCircle.normalized * Random.Range(respawnMinDistance, respawnMaxDistance);
-                Vector3 candidate = spawnPoint + new Vector3(c.x, 0f, c.y);
+                Vector3 candidate = (monsterHome != null ? monsterHome.position : spawnPoint) + new Vector3(c.x, 0f, c.y);
                 if (NavMesh.SamplePosition(candidate, out var hit, 30f, AreaMask))
                 {
                     agent.Warp(hit.position);

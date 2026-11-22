@@ -1,6 +1,6 @@
 // Builds the bot players (the same ape as you, plus a name tag) and the BotManager that fills the BOTS room.
 //
-// Menu: Grilla Purgatory > 9. Add Bot Room to Current Scene   (the dome map includes it already)
+// Menu: Grilla Purgatory > 9. Add Bot Room to Current Scene
 using System.Collections.Generic;
 using GorillaLocomotion;
 using GrillaPurgatory.Game;

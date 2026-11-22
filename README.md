@@ -178,78 +178,65 @@ quality presets). It shows one view from the centre of your head, so there is no
 - Fresh scene: menu **2** builds both. Existing scene: run **7. Add Player Avatar and Mirror**, then **4. Add Monster and
   Bake NavMesh** (rebakes around the solid mirror frame), then save.
 
-## Map 2: The Dome
-Run **Grilla Purgatory → 8. Create Dome Map Scene**. It builds `Assets/_Project/Scenes/Dome.unity` and puts it **first** in
-Build Settings, so a build starts here. (The original field is still `Field.unity`; open it from the Project window.)
-
-**The dome.** A huge hollow half-sphere of textured wood planks (24 m across, 12 m high) with an arched doorway and a
-skylight, a plank floor, and four warm lanterns. You start near the back wall. It is a **safe spot**: inside it the
-monster can't see, hear or catch you, and the interior is cut out of its walkable ground so it can't walk in. Your
-controllers buzz as you cross the edge.
-- The **graphics computer** (the same one as before) is mounted on the back wall, on a shelf with a keyboard.
-- Next to it, the **update log**: touch **< NEWER** / **OLDER >** to turn the pages. The text lives in `UpdateLog.cs`;
-  add a new `Entry` at the top of the list for each release.
-- A mirror stands beside your spawn point.
-
-**The field.** Walk out the door (it faces the way you start looking) into a 400 x 400 m grass plain: a few big gentle
-hills, a few dozen trees at least 34 m apart (every third is climbable), and high ground around the edge so the field
-has an end. Fog hides the distance.
-
-**The monster.** The same creature with **no eyes** (smooth scars where they were), **huge ears**, and a new brain
-(`MonsterAI.blind`):
-- It **can't see you at all**. It only reacts to **sound**.
-- **Noise comes from your hands and your body.** A hand hitting a surface is as loud as it was fast (a gentle placement
-  is silent, a hard slap is a full-volume bang). Your body rustles when it moves faster than ~1.2 m/s, louder as you
-  speed up to ~6 m/s.
-- A quiet sound only draws it over to look. A loud one (loudness over 0.4) makes it **charge the spot** at **11 m/s**,
-  faster than any launch. It keeps hunting while you keep making noise, then searches the last spot for a few seconds
-  and gives up.
-- **Walk slowly to stay hidden.** Stay quiet, get out of reach (it can't jump: use the trees), or run for the dome.
-- It starts just outside the dome (20-30 m from its centre) and prowls the ground around it. After you die it
-  reappears 20-32 m from where you wake up. It can't enter the dome, so inside you are safe. Change `respawnMinDistance` /
-  `respawnMaxDistance` and `wanderRadius` on its `MonsterAI`; re-run menu **8** to apply them to the scene.
-- Tuning is on the monster's `MonsterAI` component (speeds, hearing radius, `alertLoudness`, body-noise speeds), and
-  `Player` has `quietHandSpeed` / `loudHandSpeed` for how hand speed maps to loudness.
-
-**Heads-up for the first map.** Hand strikes are now loudness-based everywhere, so the original monster also hears slow
-hand placements less far than before.
-
 ## Building the APK from the command line
-`BuildScript.BuildQuestApk` regenerates the scene and builds it. It builds the **dome map by default**; add `-map field`
-for the original field. (It used to be hardwired to `Field.unity`, so a headless build always came out as the old map.)
+`BuildScript.BuildQuestApk` regenerates the scene and builds it. It builds the **facility map by default**; add `-map field`
+for the original field.
 ```
 Unity -batchmode -quit -projectPath . -executeMethod GrillaPurgatory.Setup.BuildScript.BuildQuestApk -buildOutput Builds/GrillaPurgatory.apk [-map field]
 ```
-In the editor, pressing Play runs whichever scene is open: after menu **8** that is `Dome.unity`. To switch back, open
+In the editor, pressing Play runs whichever scene is open: after menu **8** that is `Facility.unity`. To switch back, open
 `Assets/_Project/Scenes/Field.unity`.
 
+## Map 2: The Facility
+Run **Grilla Purgatory -> 8. Create Facility Map Scene**. It builds `Assets/_Project/Scenes/Facility.unity` and puts it
+**first** in Build Settings. The map is made of metal panels with brushed, riveted textures generated in code, and it has
+**no sun or skybox**: every bit of light is placed on purpose.
+
+**The way through**
+1. **Spawn room.** Small, but tall (8 x 10 m, 7 m high), lit, with a **mirror on the wall behind you** and an EXIT sign over
+   the doorway ahead.
+2. A short **corridor** to...
+3. the **storeroom**: big (28 x 40 m, 10 m high), full of rows of metal **shelves** stacked with crates. A clear **path**
+   runs down the middle, marked with yellow lines, to a long **staircase**.
+4. Up the stairs to a landing and through an opening into a **pitch black room**. There are no lights in it at all. Far
+   ahead (about 33 m) is one **blindingly bright door**.
+5. **Walk toward the door.** The nearer you get, the more the glare floods your view, and when you reach it you are whited
+   out, carried away, and fade in from black in...
+6. a **very dark fog field**: you arrive on a metal platform, you can see only a few dozen metres, and the monster is out
+   there.
+
+**The field and the monster**
+- **Platforms.** A winding chain of 13 metal platforms, 2.2-3 m above the ground, with glowing edge strips so you can see
+  them in the dark. Gaps are 3-3.5 m: a good launch clears them. The chain loops back toward the arrival platform, and
+  there are **stairs down to the grass and back up** at the first and last platforms.
+- **Grass is loud.** Any step on the grass, even a slow one, is heard (`SurfaceSound` Loud): the monster **rushes the spot**.
+- **Platforms are silent.** Walk on them, run on them, or **jump between them** and it isn't alerted at all (`SurfaceSound`
+  Silent). Moving through the air makes no sound either. Landing back on the grass does.
+- The platforms are also tall enough that the monster can't reach you on top of one (it can't jump and grabs only 2.7 m up).
+- The monster is the **eyeless** one: it can't see you, has huge ears, hunts only by sound, and is very fast (11 m/s). Only
+  big movements on ordinary surfaces make noise, so tiptoeing is silent there too. It starts 45-65 m from where you arrive.
+- If it catches you, you wake up back in the spawn room, and it returns to the field (`MonsterAI.monsterHome`).
+
+Tuning: `SurfaceSound` on the terrain (`loudnessFloor`) and on the platforms; the platform layout is the `Chain` table in
+`FacilityFieldBuilder`; fog and lighting are `EnvironmentZone`s (ambient light and fog per area, applied while your head
+is inside).
+
 ## Rooms and bots
-**ROOM tab on the computer.** The computer has two tabs now: GRAPHICS and ROOM. On ROOM, type a join code on the on-screen
+**ROOM tab on the computer.** The computer has two tabs: GRAPHICS and ROOM. On ROOM, type a join code on the on-screen
 keyboard (touch the keys with your hand), then press **JOIN**. **LEAVE ROOM** takes you back to playing solo.
 
-**Code `BOTS`** (the sign beside the computer says who it's for: "Join code BOTS if you're a scardy cat"). It fills the
-world with 5 computer-controlled players:
+**Code `BOTS`** fills the world with 5 computer-controlled players. (The facility map has no computer or bot room; the
+original field map does, and **Grilla Purgatory -> 9. Add Bot Room to Current Scene** adds one to any scene with a safe zone.)
 - **Honest note:** there is no online server. The BOTS room runs entirely on your device, and the bots are simulated
   players. Any other code says "No server found". `RoomService` is the one place a real networking layer could be added.
-- They look like you (the ape, in different fur colours), with a **name tag** and **chat bubbles** ("stay in the dome",
-  "sneaking...", "RUN!!"). They shuffle around the dome, glance about, beat their chests, and some are braver than
-  others: bold ones go out into the field, nervous ones stay put.
+- They look like you (the ape, in different fur colours), with a **name tag** and **chat bubbles**. They gather in the safe
+  zone, glance about, beat their chests, and some are braver than others: bold ones go out, nervous ones stay put.
 - They **run, or tiptoe when the monster is near**, and every fist they plant makes noise as loud as their speed, so the
-  monster hears them and hunts them just like you. If it panics them they **run for the dome**. If it catches one it
+  monster hears them and hunts them just like you. If it panics them they **run for the safe zone**. If it catches one it
   eats them (you can hear it from far off, and while it feasts for a few seconds it ignores you), and the player
-  reappears in the dome 9-15 s later, a bit warier.
-- Joining in a map with no bot room says so. Existing scenes: **Grilla Purgatory -> 9. Add Bot Room to Current Scene**.
-  Rebuild the dome with menu **8** to get the new sign, tab and bots.
+  reappears in the safe zone 9-15 s later, a bit warier.
 
-**Only big movements alert the monster.** Noises below `hearThreshold` (0.3) are ignored completely, and the loudness
-curves were widened: a hand touch is silent below 0.8 m/s and a full slap at 4 m/s (`Player.quietHandSpeed` /
-`loudHandSpeed`); your body is silent below 2 m/s and loud by 7 m/s (`MonsterAI.quietBodySpeed` / `loudBodySpeed`).
-**Tiptoe** (slow hand placements, slow body movement) and it won't notice you at all. A loud swing needs 0.6 loudness to
-make it charge; between 0.3 and 0.6 it only goes to look.
-
-**Bots going in and out.** Bots use the dome's door: the braver ones walk out into the field (tiptoeing when the monster
-could be about, running when it is far), wander for 35-80 s, then come back in. They leave the dome unless the monster is
-within 28 m or hunting. When it gets within ~18-34 m of a bot that is outside, or is hunting within 55 m, the bot panics
-and **runs for the dome** at 6.3 m/s, then waits 10-25 s before venturing out again. The two most nervous bots never
-leave. (A bug had kept every bot inside: they only went out if the monster was over 45 m away, but it now prowls the area
-around the dome.) If a bot isn't on the NavMesh the Console says so.
+**Only big movements alert the eyeless monster.** Noises below `hearThreshold` (0.3) are ignored completely: a hand touch is
+silent below 0.8 m/s and a full slap at 4 m/s (`Player.quietHandSpeed` / `loudHandSpeed`); your body is silent below 2 m/s
+and loud by 7 m/s (`MonsterAI.quietBodySpeed` / `loudBodySpeed`). A loud noise (0.6+) makes it charge; between 0.3 and 0.6
+it only goes to look. `SurfaceSound` can override all of that for a surface: silent, or never quieter than a floor.

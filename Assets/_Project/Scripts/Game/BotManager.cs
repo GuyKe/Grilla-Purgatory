@@ -78,7 +78,7 @@ namespace GrillaPurgatory.Game
                 names.Remove(playerName);
 
                 bot.Configure(this, playerName, Tints[Random.Range(0, Tints.Length)], Bravery[i % Bravery.Length]);
-                bot.transform.position = RandomDomePoint();
+                bot.transform.position = RandomHomePoint();
                 bot.transform.rotation = Quaternion.Euler(0f, Random.value * 360f, 0f);
                 bot.transform.SetParent(transform, true);   // now it wakes up
                 bots.Add(bot);
@@ -95,7 +95,7 @@ namespace GrillaPurgatory.Game
         }
 
         /// <summary>A spot on the NavMesh inside the safe zone, away from the real player.</summary>
-        public Vector3 RandomDomePoint()
+        public Vector3 RandomHomePoint()
         {
             Vector3 avoid = GorillaLocomotion.Player.Instance != null ? GorillaLocomotion.Player.Instance.transform.position : Vector3.positiveInfinity;
             for (int i = 0; i < 25; i++)

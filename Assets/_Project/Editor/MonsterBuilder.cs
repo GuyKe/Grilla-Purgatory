@@ -38,8 +38,9 @@ namespace GrillaPurgatory.Setup
             Debug.Log("[Grilla Purgatory] Monster added and NavMesh baked. Save the scene (Ctrl+S).");
         }
 
-        /// <param name="blind">The eyeless variant used in the dome map: no sight, huge ears, very fast, hunts by sound.</param>
-        public static void AddToScene(bool blind = false)
+        /// <param name="blind">The eyeless variant: no sight, huge ears, very fast, hunts by sound.</param>
+        /// <param name="startAround">Where to start it (default: the world origin). It starts startMin-startMax metres from here.</param>
+        public static void AddToScene(bool blind = false, Vector3? startAround = null, float startMin = 0f, float startMax = 0f)
         {
             foreach (var name in new[] { "Monster", "NavMesh Surface" })
             {
@@ -52,7 +53,7 @@ namespace GrillaPurgatory.Setup
             var prefab = BuildMonsterPrefab(blind);
             var instance = (GameObject)PrefabUtility.InstantiatePrefab(prefab);
             instance.name = "Monster";
-            instance.transform.position = FindStartPoint(blind);
+            instance.transform.position = FindStartPoint(blind, startAround ?? Vector3.zero, startMin, startMax);
         }
 
         static void BakeNavMesh()
@@ -66,19 +67,24 @@ namespace GrillaPurgatory.Setup
             surface.BuildNavMesh();
         }
 
-        static Vector3 FindStartPoint(bool blind)
+        static Vector3 FindStartPoint(bool blind, Vector3 around, float minDistance, float maxDistance)
         {
+            if (maxDistance <= 0f)
+            {
+                minDistance = blind ? 20f : 24f;   // close enough to feel it, far enough to start safe
+                maxDistance = blind ? 30f : 36f;
+            }
             for (int i = 0; i < 50; i++)
             {
                 float angle = Random.value * Mathf.PI * 2f;
-                float radius = blind ? Random.Range(20f, 30f) : Random.Range(24f, 36f);   // the dome monster starts just outside the dome
-                var p = new Vector3(Mathf.Cos(angle) * radius, 0f, Mathf.Sin(angle) * radius);
+                float radius = Random.Range(minDistance, maxDistance);
+                var p = around + new Vector3(Mathf.Cos(angle) * radius, 0f, Mathf.Sin(angle) * radius);
                 if (NavMesh.SamplePosition(p, out var hit, 10f, NavMesh.AllAreas) &&
-                    new Vector2(hit.position.x, hit.position.z).magnitude > 14f)
+                    new Vector2(hit.position.x - around.x, hit.position.z - around.z).magnitude > Mathf.Min(14f, minDistance * 0.7f))
                     return hit.position;
             }
             Debug.LogWarning("[Grilla Purgatory] No NavMesh found for the monster start. Build the terrain first (menu 3).");
-            return new Vector3(0f, 0f, 45f);
+            return around + new Vector3(0f, 0f, 45f);
         }
 
         // ---------------------------------------------------------------- prefab
@@ -255,8 +261,8 @@ namespace GrillaPurgatory.Setup
                 ai.loseSightSeconds = 6f;      // how long it keeps hunting after the last noise
                 ai.searchSeconds = 6f;
                 ai.catchDistance = 1.9f;
-                ai.wanderRadius = 40f;         // it prowls the area around the dome instead of wandering off across the field
-                ai.respawnMinDistance = 20f;   // and comes back close to where you wake up (just outside the dome)
+                ai.wanderRadius = 40f;         // it prowls the area around where it starts
+                ai.respawnMinDistance = 20f;   // and comes back this close (maps can move it with MonsterAI.monsterHome)
                 ai.respawnMaxDistance = 32f;
                 agent.acceleration = 32f;
                 agent.angularSpeed = 720f;

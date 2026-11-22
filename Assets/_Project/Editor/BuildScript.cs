@@ -1,6 +1,6 @@
 // Headless Quest APK build.
 // Usage: Unity -batchmode -quit -projectPath . -executeMethod GrillaPurgatory.Setup.BuildScript.BuildQuestApk -buildOutput Builds/GrillaPurgatory.apk
-// Add "-map field" to build the original field map. The default is the dome map ("-map dome").
+// Add "-map field" to build the original field map. The default is the facility map ("-map facility").
 using System;
 using System.IO;
 using System.Linq;
@@ -13,7 +13,7 @@ namespace GrillaPurgatory.Setup
     public static class BuildScript
     {
         const string FieldScenePath = "Assets/_Project/Scenes/Field.unity";
-        const string DomeScenePath = "Assets/_Project/Scenes/Dome.unity";
+        const string FacilityScenePath = "Assets/_Project/Scenes/Facility.unity";
 
         public static void BuildQuestApk()
         {
@@ -49,13 +49,13 @@ namespace GrillaPurgatory.Setup
             // by hand, so a map that has never been built on this machine simply doesn't exist until now.
             bool field = string.Equals(GetArg("-map"), "field", StringComparison.OrdinalIgnoreCase);
             if (field) ProjectSetup.CreateHelloScene();
-            else DomeMapBuilder.CreateScene();
+            else FacilityMapBuilder.CreateScene();
             AssetDatabase.SaveAssets();
-            Debug.Log("[Grilla Purgatory] Building the " + (field ? "field" : "dome") + " map.");
+            Debug.Log("[Grilla Purgatory] Building the " + (field ? "field" : "facility") + " map.");
 
             var options = new BuildPlayerOptions
             {
-                scenes = new[] { field ? FieldScenePath : DomeScenePath },
+                scenes = new[] { field ? FieldScenePath : FacilityScenePath },
                 locationPathName = output,
                 target = BuildTarget.Android,
                 targetGroup = BuildTargetGroup.Android,
