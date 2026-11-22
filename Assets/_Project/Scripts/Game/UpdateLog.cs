@@ -22,7 +22,7 @@ namespace GrillaPurgatory.Game
                 {
                     "New map: a metal facility. Walk through the storeroom, up the stairs and across the dark room to the bright door.",
                     "It leads to a very dark fog field where the monster hunts by sound.",
-                    "Grass is loud. Metal platforms are silent: stay on them, or jump between them, and it won't hear you.",
+                    "Everywhere out there is loud, grass and platforms alike. Platforms are too high for it to reach you.",
                 },
             },
             new Entry

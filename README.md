@@ -209,15 +209,16 @@ Run **Grilla Purgatory -> 8. Create Facility Map Scene**. It builds `Assets/_Pro
 - **Platforms.** A winding chain of 13 metal platforms, 2.2-3 m above the ground, with glowing edge strips so you can see
   them in the dark. Gaps are 3-3.5 m: a good launch clears them. The chain loops back toward the arrival platform, and
   there are **stairs down to the grass and back up** at the first and last platforms.
-- **Grass is loud.** Any step on the grass, even a slow one, is heard (`SurfaceSound` Loud): the monster **rushes the spot**.
-- **Platforms are silent.** Walk on them, run on them, or **jump between them** and it isn't alerted at all (`SurfaceSound`
-  Silent). Moving through the air makes no sound either. Landing back on the grass does.
-- The platforms are also tall enough that the monster can't reach you on top of one (it can't jump and grabs only 2.7 m up).
+- **Everywhere is loud.** Any step on the grass **or on a platform**, even a slow one, is heard (`SurfaceSound` Loud, never
+  quieter than 0.85): the monster **rushes the spot** wherever you are in the field. Jumping through the air makes no
+  sound itself, but the landing does.
+- What protects you on a platform is its **height**: it can hear you but can't reach you (it can't jump and grabs only
+  2.7 m up). It will gather at the foot of the platform and wait.
 - The monster is the **eyeless** one: it can't see you, has huge ears, hunts only by sound, and is very fast (11 m/s). Only
-  big movements on ordinary surfaces make noise, so tiptoeing is silent there too. It starts 45-65 m from where you arrive.
+  big movements on ordinary surfaces make noise (the rooms), but nowhere in the field counts as ordinary. It starts 45-65 m from where you arrive.
 - If it catches you, you wake up back in the spawn room, and it returns to the field (`MonsterAI.monsterHome`).
 
-Tuning: `SurfaceSound` on the terrain (`loudnessFloor`) and on the platforms; the platform layout is the `Chain` table in
+Tuning: `SurfaceSound` on the terrain and on the platforms (`kind`, `loudnessFloor`: set a platform to Silent to make it a hiding place); the platform layout is the `Chain` table in
 `FacilityFieldBuilder`; fog and lighting are `EnvironmentZone`s (ambient light and fog per area, applied while your head
 is inside).
 

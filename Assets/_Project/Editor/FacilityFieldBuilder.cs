@@ -1,7 +1,7 @@
 // The fog field the bright door leads to: a big, nearly flat, very dark grass plain with a chain of metal platforms
-// standing 2-3 m above it. Grass is loud (the monster rushes whatever it hears on it); platforms are silent, so you can
-// stay on them and jump from one to the next without being noticed. Platforms are also high enough that the monster
-// can't reach you when you stand on them.
+// standing 2-3 m above it. Everywhere in this map is loud: the grass and the platforms alike, so the monster rushes any
+// spot where it hears you. The platforms are high enough that it can't reach you on top of one, so they are a place to
+// survive, not a place to hide.
 using System.Collections.Generic;
 using System.IO;
 using GrillaPurgatory.Game;
@@ -240,7 +240,7 @@ namespace GrillaPurgatory.Setup
             float half = size * 0.5f;
             var body = FacilityBuilder.Box(parent, name, m.platform,
                 new Vector3(center.x - half, -0.5f, center.z - half), new Vector3(center.x + half, top, center.z + half));
-            body.AddComponent<SurfaceSound>().kind = SurfaceSound.Kind.Silent;
+            MakeLoud(body);
 
             // glowing edge strips along the top, so each platform shows up in the dark
             const float strip = 0.14f;
@@ -253,7 +253,7 @@ namespace GrillaPurgatory.Setup
             FacilityBuilder.AddLight(parent, new Vector3(center.x, top + 2.6f, center.z), new Color(0.35f, 0.8f, 1f), 1.5f, 9f);
         }
 
-        // Eight steps up the -Z side of a platform; metal, so they are silent too
+        // Eight steps up the -Z side of a platform; as loud as everything else here
         static void Stairs(Transform parent, FacilityBuilder.Materials m, Vector3 center, float size, float top)
         {
             const int steps = 8;
@@ -265,8 +265,17 @@ namespace GrillaPurgatory.Setup
                 float zFar = edgeZ - run * (steps - 1 - i);
                 var step = FacilityBuilder.Box(parent, "Stair " + (i + 1), m.platform,
                     new Vector3(center.x - 1.5f, -0.3f, zFar - run), new Vector3(center.x + 1.5f, height, zFar), 1f);
-                step.AddComponent<SurfaceSound>().kind = SurfaceSound.Kind.Silent;
+                MakeLoud(step);
             }
+        }
+
+        // Nowhere in the field is quiet: any movement on a platform is heard just like on the grass.
+        // (What protects you up there is the height: the monster can hear you but can't reach you.)
+        static void MakeLoud(GameObject surface)
+        {
+            var sound = surface.AddComponent<SurfaceSound>();
+            sound.kind = SurfaceSound.Kind.Loud;
+            sound.loudnessFloor = 0.85f;
         }
 
         static void EnsureFolder(string path)

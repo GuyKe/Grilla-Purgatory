@@ -5,7 +5,7 @@ namespace GrillaPurgatory.Game
     /// <summary>
     /// How noisy a surface is. Put it on a floor, platform or terrain:
     ///   Normal : touching it is as loud as your movement is (the default, for surfaces without this component).
-    ///   Silent : never makes a sound, however fast you move (metal platforms).
+    ///   Silent : never makes a sound, however fast you move (nothing uses this right now).
     ///   Loud   : always at least <see cref="loudnessFloor"/>, even if you tiptoe (crunchy grass: the monster rushes the spot).
     /// The monster asks this about hand strikes and about the ground under your body (see MonsterAI).
     /// </summary>
