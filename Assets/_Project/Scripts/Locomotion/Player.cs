@@ -307,7 +307,7 @@ namespace GorillaLocomotion
             leftHandFollower.position = lastLeftHandPosition;
             rightHandFollower.position = lastRightHandPosition;
 
-            // Hand strikes make noise that monsters can hear (see MonsterAI)
+            // Hand strikes make noise that monsters can hear (see Lurker)
             if (leftHandColliding && !wasLeftHandTouching) HandStrike?.Invoke(lastLeftHandPosition, StrikeLoudness(leftHandSpeed));
             if (rightHandColliding && !wasRightHandTouching) HandStrike?.Invoke(lastRightHandPosition, StrikeLoudness(rightHandSpeed));
 

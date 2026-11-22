@@ -22,7 +22,6 @@ namespace GrillaPurgatory.Setup
         const string SettingsFolder = Root + "/Settings";
         const string ScenesFolder = Root + "/Scenes";
         const string MaterialsFolder = Root + "/Art/Materials";
-        const string ScenePath = ScenesFolder + "/Field.unity";
 
         const string OpenXRLoader = "UnityEngine.XR.OpenXR.OpenXRLoader";
 
@@ -174,56 +173,6 @@ namespace GrillaPurgatory.Setup
             return true;
         }
 
-        [MenuItem("Grilla Purgatory/2. Create Hello VR Scene", priority = 2)]
-        public static void CreateHelloScene()
-        {
-            if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
-                return;
-
-            EnsureFolder(ScenesFolder);
-            EnsureFolder(MaterialsFolder);
-
-            var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
-
-            // Lighting
-            var sun = new GameObject("Sun").AddComponent<Light>();
-            sun.type = LightType.Directional;
-            sun.intensity = 1.1f;
-            sun.shadows = LightShadows.None;
-            sun.transform.rotation = Quaternion.Euler(50f, -30f, 0f);
-            RenderSettings.fog = true;
-            RenderSettings.fogMode = FogMode.Linear;
-            RenderSettings.fogColor = new Color(0.55f, 0.6f, 0.58f);
-            RenderSettings.fogStartDistance = 15f;
-            RenderSettings.fogEndDistance = 60f;
-
-            // Hilly grass terrain (flat start area at y = 0), see TerrainBuilder
-            TerrainBuilder.CreateFieldTerrain();
-
-            // A few blocks to test climbing later
-            var rockMat = GetOrCreateMaterial("Rock_Placeholder", new Color(0.4f, 0.4f, 0.42f));
-            var blocks = new GameObject("Test Blocks");
-            CreateBlock(blocks.transform, rockMat, new Vector3(0f, 0.5f, 3f), new Vector3(1f, 1f, 1f));
-            CreateBlock(blocks.transform, rockMat, new Vector3(3f, 1f, 4f), new Vector3(2f, 2f, 2f));
-            CreateBlock(blocks.transform, rockMat, new Vector3(-4f, 1.5f, 5f), new Vector3(1.5f, 3f, 1.5f));
-
-            CreateTestCourse();
-
-            CreateRig();
-
-            ComputerBuilder.AddToScene();
-            SafeZoneBuilder.AddToScene();
-            MirrorBuilder.AddToScene();
-            MonsterBuilder.AddToScene(); // bakes the NavMesh too, so it must come after the terrain, trees, rig and desk
-
-            EditorSceneManager.SaveScene(scene, ScenePath);
-            var scenes = EditorBuildSettings.scenes.Where(s => s.path != ScenePath).ToList();
-            scenes.Insert(0, new EditorBuildSettingsScene(ScenePath, true));
-            EditorBuildSettings.scenes = scenes.ToArray();
-
-            Debug.Log("[Grilla Purgatory] Created " + ScenePath + " and added it to Build Settings.");
-        }
-
         internal static void CreateRig()
         {
             int playerLayer = EnsureLayer("Player");
@@ -306,62 +255,8 @@ namespace GrillaPurgatory.Setup
             arms.rightHand = rightFollower;
             arms.material = GetOrCreateMaterial("Arm_Placeholder", new Color(0.18f, 0.14f, 0.12f));
 
-            // Furry ape body, head and fists over the placeholder arms and hand spheres
-            AvatarBuilder.Build(rigGo);
-        }
-
-        /// <summary>Practice area for each technique: ice, a wall, a pinch-climb chimney and two trees.</summary>
-        static void CreateTestCourse()
-        {
-            var root = new GameObject("Test Course").transform;
-            var bark = GetOrCreateMaterial("Bark_Placeholder", new Color(0.3f, 0.2f, 0.12f));
-            var ice = GetOrCreateMaterial("Ice_Placeholder", new Color(0.65f, 0.85f, 0.95f));
-            var wallMat = GetOrCreateMaterial("Wall_Placeholder", new Color(0.45f, 0.45f, 0.48f));
-
-            // Ice patch (slippery) - to the left
-            var iceGo = CreateBlock(root, ice, new Vector3(-9f, 0.03f, 4f), new Vector3(8f, 0.06f, 8f));
-            iceGo.name = "Ice";
-            iceGo.AddComponent<GorillaLocomotion.Surface>().slipPercentage = GorillaLocomotion.Surface.IceSlip;
-            iceGo.GetComponent<Collider>().sharedMaterial = GetOrCreateLowFrictionMaterial("Ice", 0.02f); // body slides too
-
-            // Tall wall for wall running (push down parallel to it) - to the right
-            CreateBlock(root, wallMat, new Vector3(8f, 5f, 8f), new Vector3(0.6f, 10f, 14f)).name = "Wall";
-
-            // Pinch-climb chimney: two walls leaning slightly toward each other, ~1.4 m apart
-            var lw = CreateBlock(root, wallMat, new Vector3(-0.85f, 5f, 14f), new Vector3(0.4f, 10f, 5f));
-            var rw = CreateBlock(root, wallMat, new Vector3(0.85f, 5f, 14f), new Vector3(0.4f, 10f, 5f));
-            lw.name = "Chimney Left"; rw.name = "Chimney Right";
-            lw.transform.rotation = Quaternion.Euler(0f, 0f, -4f);
-            rw.transform.rotation = Quaternion.Euler(0f, 0f, 4f);
-
-            // Two trees with branches to swing between
-            CreateTree(root, bark, new Vector3(-10f, 0f, 16f), 0f);
-            CreateTree(root, bark, new Vector3(-5f, 0f, 19f), 40f);
-        }
-
-        static void CreateTree(Transform parent, Material bark, Vector3 pos, float yawOffset)
-        {
-            var tree = new GameObject("Tree").transform;
-            tree.SetParent(parent, false);
-            tree.position = pos;
-
-            var trunk = CreateBlock(tree, bark, pos + Vector3.up * 5f, Vector3.one, PrimitiveType.Cylinder);
-            trunk.name = "Trunk";
-            trunk.transform.localScale = new Vector3(0.9f, 5f, 0.9f); // 0.9 m wide, 10 m tall
-            trunk.AddComponent<GorillaLocomotion.Surface>().slipPercentage = GorillaLocomotion.Surface.BarkSlip;
-
-            // Branches spiral up the trunk
-            for (int i = 0; i < 5; i++)
-            {
-                float yaw = yawOffset + i * 72f;
-                float height = 2.5f + i * 1.6f;
-                Vector3 dir = Quaternion.Euler(0f, yaw, 0f) * Vector3.forward;
-                var branch = CreateBlock(tree, bark, pos + Vector3.up * height + dir * 1.6f, Vector3.one, PrimitiveType.Cylinder);
-                branch.name = "Branch " + (i + 1);
-                branch.transform.localScale = new Vector3(0.22f, 1.6f, 0.22f);        // 3.2 m long
-                branch.transform.rotation = Quaternion.LookRotation(dir) * Quaternion.Euler(90f, 0f, 0f);
-                branch.AddComponent<GorillaLocomotion.Surface>().slipPercentage = GorillaLocomotion.Surface.BarkSlip;
-            }
+            // The character's body, head and fists over the placeholder arms and hand spheres
+            CharacterBuilder.BuildPlayer(rigGo);
         }
 
         static Transform CreateTrackedHand(Transform parent, string name, XRNode node, int layer)

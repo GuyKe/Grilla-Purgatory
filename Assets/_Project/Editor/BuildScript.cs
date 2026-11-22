@@ -1,6 +1,6 @@
 // Headless Quest APK build.
 // Usage: Unity -batchmode -quit -projectPath . -executeMethod GrillaPurgatory.Setup.BuildScript.BuildQuestApk -buildOutput Builds/GrillaPurgatory.apk
-// Add "-map field" to build the original field map. The default is the facility map ("-map facility").
+// It builds the loading screen and the game (the safe box and the maze) from code, then packages both.
 using System;
 using System.IO;
 using System.Linq;
@@ -12,9 +12,6 @@ namespace GrillaPurgatory.Setup
 {
     public static class BuildScript
     {
-        const string FieldScenePath = "Assets/_Project/Scenes/Field.unity";
-        const string FacilityScenePath = "Assets/_Project/Scenes/Facility.unity";
-
         public static void BuildQuestApk()
         {
             string output = GetArg("-buildOutput") ?? "Builds/GrillaPurgatory.apk";
@@ -45,17 +42,14 @@ namespace GrillaPurgatory.Setup
             // Run twice: the first pass creates XR loader/feature settings, the second one enables them.
             ProjectSetup.ConfigureProject();
             ProjectSetup.ConfigureProject();
-            // Always regenerate so the scene matches the current builders. The scenes are generated, not committed
-            // by hand, so a map that has never been built on this machine simply doesn't exist until now.
-            bool field = string.Equals(GetArg("-map"), "field", StringComparison.OrdinalIgnoreCase);
-            if (field) ProjectSetup.CreateHelloScene();
-            else FacilityMapBuilder.CreateScene();
+            // Always regenerate so the scenes match the current builders. They are generated, not committed by hand, so a
+            // scene that has never been built on this machine simply doesn't exist until now.
+            GameMapBuilder.BuildAll();
             AssetDatabase.SaveAssets();
-            Debug.Log("[Grilla Purgatory] Building the " + (field ? "field" : "facility") + " map.");
 
             var options = new BuildPlayerOptions
             {
-                scenes = new[] { field ? FieldScenePath : FacilityScenePath },
+                scenes = new[] { GameMapBuilder.LoadingScenePath, GameMapBuilder.GameScenePath },   // the loading screen runs first
                 locationPathName = output,
                 target = BuildTarget.Android,
                 targetGroup = BuildTargetGroup.Android,

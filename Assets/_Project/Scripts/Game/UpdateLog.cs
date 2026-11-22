@@ -1,7 +1,7 @@
 namespace GrillaPurgatory.Game
 {
     /// <summary>
-    /// The text shown on an update log screen. Newest first. To add a release, put a new Entry at
+    /// The text shown on the update log screen in the box. Newest first. To add a release, put a new Entry at
     /// the top of the list (keep each note to about one line so it fits on the screen).
     /// </summary>
     public static class UpdateLog
@@ -17,71 +17,23 @@ namespace GrillaPurgatory.Game
         {
             new Entry
             {
-                Version = "v0.11", Title = "The Facility",
+                Version = "v1.0", Title = "The Box and the Maze",
                 Notes = new[]
                 {
-                    "New map: a metal facility. Walk through the storeroom, up the stairs and across the dark room to the bright door.",
-                    "It leads to a very dark fog field where the monster hunts by sound.",
-                    "Everywhere out there is loud, grass and platforms alike. Platforms are too high for it to reach you.",
+                    "A new character, Pip, waves at you on the loading screen and in the mirror.",
+                    "You wake in a safe box: a desk and computer, a mirror, this update log and a security monitor.",
+                    "Press the red button for a flashlight from the conveyor. Squeeze a grip to pick it up.",
+                    "The monitor shows cameras in the maze, in the style of an old VHS tape.",
+                    "Walk out the door into a massive, dark maze. Something is lurking in it.",
                 },
             },
             new Entry
             {
-                Version = "v0.10", Title = "Rooms",
+                Version = "v0.9", Title = "A fresh start",
                 Notes = new[]
                 {
-                    "New ROOM tab on the computer: type a join code with the keyboard and press JOIN.",
-                    "Code BOTS: a room full of other players who act like real ones (simulated, offline).",
-                    "Bots chat, wander, tiptoe, panic and run for safety, and the monster hunts them too.",
-                    "Only big movements make noise now. Tiptoe slowly and the monster won't hear you.",
-                },
-            },
-            new Entry
-            {
-                Version = "v0.8", Title = "The Ape",
-                Notes = new[]
-                {
-                    "You now have a body: a furry ape with a head, torso, arms and fists. No legs.",
-                    "A working mirror so you can see yourself. Quality is set on the computer.",
-                },
-            },
-            new Entry
-            {
-                Version = "v0.7", Title = "Fear",
-                Notes = new[]
-                {
-                    "A quiet heartbeat that speeds up as the monster gets close, and the edges of your view darken.",
-                    "The monster now starts and respawns closer to you.",
-                    "Dying is now a black screen and the sound of being eaten.",
-                },
-            },
-            new Entry
-            {
-                Version = "v0.6", Title = "Safe Spot",
-                Notes = new[]
-                {
-                    "A safe zone around the spawn and the graphics computer: the monster can't enter.",
-                    "The graphics computer: touch the screen to change quality, resolution and more.",
-                    "Fixed being hard to move after dying.",
-                },
-            },
-            new Entry
-            {
-                Version = "v0.5", Title = "The Hollow",
-                Notes = new[]
-                {
-                    "The first monster: it wanders, hears your hands, chases on sight and catches you.",
-                    "It can't jump, so high ground keeps you out of reach.",
-                    "A death cutscene when it catches you.",
-                },
-            },
-            new Entry
-            {
-                Version = "v0.4", Title = "The Field",
-                Notes = new[]
-                {
-                    "A hilly grass field with grass, dirt and rock, and a forest of climbable trees.",
-                    "Fixed sliding everywhere; only ice is slippery now.",
+                    "Removed the old maps, monsters, bots and rooms to start again.",
+                    "Kept: the gorilla movement, arm-span calibration, the mirror and the computer.",
                 },
             },
             new Entry
@@ -90,8 +42,7 @@ namespace GrillaPurgatory.Game
                 Notes = new[]
                 {
                     "Arm-span calibration: hold both grips in a T-pose.",
-                    "Surfaces grip differently: bark sticks, ice slides.",
-                    "A test course for running, wall running, pinch climbing and branching.",
+                    "Surfaces can grip or slide.",
                 },
             },
             new Entry

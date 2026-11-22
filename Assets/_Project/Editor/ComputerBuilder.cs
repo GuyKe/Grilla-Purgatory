@@ -26,6 +26,12 @@ namespace GrillaPurgatory.Setup
 
         public static void AddToScene()
         {
+            AddToScene(Position, Vector3.zero);
+        }
+
+        /// <summary>Builds the desk and computer at 'position', with the screen turned to face 'faceToward'.</summary>
+        public static void AddToScene(Vector3 position, Vector3 faceToward)
+        {
             var old = GameObject.Find("Graphics Computer");
             if (old != null) Object.DestroyImmediate(old);
 
@@ -37,9 +43,9 @@ namespace GrillaPurgatory.Setup
             EditorUtility.SetDirty(led);
 
             var root = new GameObject("Graphics Computer").transform;
-            root.position = Position;
+            root.position = position;
             // local +Z points away from the viewer (toward the back of the desk), so the screen faces the spawn point
-            Vector3 away = Vector3.ProjectOnPlane(Position, Vector3.up).normalized;
+            Vector3 away = Vector3.ProjectOnPlane(position - faceToward, Vector3.up).normalized;
             root.rotation = Quaternion.LookRotation(away, Vector3.up);
 
             // Desk: top and four legs

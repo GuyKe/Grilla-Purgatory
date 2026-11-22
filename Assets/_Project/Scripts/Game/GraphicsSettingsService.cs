@@ -10,7 +10,7 @@ namespace GrillaPurgatory.Game
     /// </summary>
     public static class GraphicsSettingsService
     {
-        public enum Setting { RenderScale, AntiAliasing, Grass, ViewDistance, Textures, Mirror }
+        public enum Setting { RenderScale, AntiAliasing, Grass, ViewDistance, Textures, Mirror, Vhs }
 
         public static readonly string[] PresetNames = { "LOW", "MEDIUM", "HIGH", "ULTRA" };
 
@@ -22,15 +22,16 @@ namespace GrillaPurgatory.Game
         static readonly float[] ViewDistances = { 40f, 60f, 90f, 120f };
         static readonly string[] TextureNames = { "Low", "Medium", "High" };
         static readonly string[] MirrorNames = { "Off", "Low", "High" };
+        static readonly string[] VhsNames = { "Off", "On" };
         static readonly int[] MirrorHeights = { 0, 256, 512 };   // reflection texture height in pixels (0 = mirror off)
 
-        // Order matches Setting: render scale, AA, grass, view distance, textures, mirror
+        // Order matches Setting: render scale, AA, grass, view distance, textures, mirror, VHS view
         static readonly int[][] Presets =
         {
-            new[] { 0, 0, 1, 0, 0, 0 },   // LOW
-            new[] { 1, 1, 2, 1, 1, 1 },   // MEDIUM
-            new[] { 2, 2, 2, 2, 2, 2 },   // HIGH
-            new[] { 3, 2, 3, 3, 2, 2 },   // ULTRA
+            new[] { 0, 0, 1, 0, 0, 0, 1 },   // LOW
+            new[] { 1, 1, 2, 1, 1, 1, 1 },   // MEDIUM
+            new[] { 2, 2, 2, 2, 2, 2, 1 },   // HIGH
+            new[] { 3, 2, 3, 3, 2, 2, 1 },   // ULTRA
         };
 
         static int[] values = (int[])Presets[1].Clone();
@@ -46,6 +47,9 @@ namespace GrillaPurgatory.Game
         /// <summary>Height in pixels of the mirror's reflection texture; 0 means the mirror is switched off.</summary>
         public static int MirrorHeight { get { return MirrorHeights[values[(int)Setting.Mirror]]; } }
 
+        /// <summary>Whether the old-camcorder look (grain, scan lines, a REC light) is on.</summary>
+        public static bool VhsEnabled { get { return values[(int)Setting.Vhs] == 1; } }
+
         public static int Count(Setting s)
         {
             switch (s)
@@ -55,7 +59,8 @@ namespace GrillaPurgatory.Game
                 case Setting.Grass: return GrassNames.Length;
                 case Setting.ViewDistance: return ViewDistances.Length;
                 case Setting.Textures: return TextureNames.Length;
-                default: return MirrorNames.Length;
+                case Setting.Mirror: return MirrorNames.Length;
+                default: return VhsNames.Length;
             }
         }
 
@@ -69,7 +74,8 @@ namespace GrillaPurgatory.Game
                 case Setting.Grass: return GrassNames[i];
                 case Setting.ViewDistance: return Mathf.RoundToInt(ViewDistances[i]) + " m";
                 case Setting.Textures: return TextureNames[i];
-                default: return MirrorNames[i];
+                case Setting.Mirror: return MirrorNames[i];
+                default: return VhsNames[i];
             }
         }
 
